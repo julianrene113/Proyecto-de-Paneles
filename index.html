@@ -1,1225 +1,2142 @@
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculadora Solar — Proyecto de Paneles</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --bg:#0A0F1E;--bg2:#111827;--bg3:#1a2235;--border:rgba(255,255,255,0.08);
-      --text:#F0F4FF;--text2:#8B9DC3;--green:#00C896;--blue:#1E6FD9;
-      --glow:rgba(0,200,150,0.15);--radius:14px;--shadow:0 8px 32px rgba(0,0,0,0.4);
-      --sidebar:240px;
-    }
-    [data-theme="light"]{--bg:#F0F4FF;--bg2:#FFFFFF;--bg3:#E4EAF8;--border:rgba(0,0,0,0.08);--text:#0A0F1E;--text2:#4A5878;--glow:rgba(0,200,150,0.1);--shadow:0 8px 32px rgba(0,0,0,0.1);}
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;transition:background .3s,color .3s;}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SolarCalc Pro — Dimensionador FV</title>
+<style>
+/* ═══════════════════════════════════════════ TOKENS */
+:root {
+  --green:#6FAE8E; --green-dim:rgba(111,174,142,.12); --green-mid:rgba(111,174,142,.22);
+  --blue:#7B96B8;  --blue-dim:rgba(123,150,184,.12);
+  --amber:#C9A66B; --amber-dim:rgba(201,166,107,.12);
+  --red:#C77B6F;   --red-dim:rgba(199,123,111,.12);
+  --purple:#9A8FBF;--purple-dim:rgba(154,143,191,.12);
+  --radius:12px; --radius-sm:8px; --radius-xs:6px;
+  --transition:.2s ease;
+  --font:'Inter',system-ui,-apple-system,sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#1A1D21; --bg2:#21252A; --bg3:#262B31; --bg4:#2C3138;
+  --border:#363C44; --border2:#454C55;
+  --text:#D8DCE1; --text2:#9098A3; --text3:#5B6270;
+  --shadow:0 4px 20px rgba(0,0,0,.3);
+  --card-bg:#21252A;
+}
+[data-theme="light"]{
+  --bg:#F4F2EE; --bg2:#FDFCFA; --bg3:#EFECE6; --bg4:#E8E4DC;
+  --border:#DDD8CE; --border2:#C9C2B4;
+  --text:#33312D; --text2:#6B6862; --text3:#9C988F;
+  --shadow:0 4px 16px rgba(0,0,0,.06);
+  --card-bg:#FDFCFA;
+}
 
-    /* SIDEBAR — igual que dashboard */
-    .sidebar{width:var(--sidebar);min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:50;transition:transform .3s,background .3s;}
-    .sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border);}
-    .logo-mark{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1rem;color:var(--text);text-decoration:none;}
-    .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--green),var(--blue));border-radius:8px;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;}
-    .logo-icon span{background:rgba(255,255,255,.9);border-radius:2px;}
-    .sidebar-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;}
-    .nav-section-label{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);padding:12px 8px 6px;}
-    .nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--text2);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .2s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;}
-    .nav-item:hover{background:var(--bg3);color:var(--text);}
-    .nav-item.active{background:linear-gradient(135deg,rgba(0,200,150,.15),rgba(30,111,217,.15));color:var(--green);border:1px solid rgba(0,200,150,.2);}
-    .nav-item .icon{font-size:1.1rem;width:22px;text-align:center;}
-    .sidebar-bottom{padding:16px 12px;border-top:1px solid var(--border);}
-    .user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--bg3);margin-bottom:8px;}
-    .user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:white;overflow:hidden;flex-shrink:0;}
-    .user-avatar img{width:100%;height:100%;object-fit:cover;}
-    .user-info{flex:1;min-width:0;}
-    .user-name{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .user-plan{font-size:.7rem;color:var(--green);font-weight:600;}
-    .btn-logout{width:100%;padding:9px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--text2);font-size:.8rem;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;}
-    .btn-logout:hover{border-color:#ff4d6d;color:#ff4d6d;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;transition:background var(--transition),color var(--transition);font-size:14px;line-height:1.5}
 
-    /* MAIN */
-    .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;}
-    .topbar{padding:20px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:40;}
-    .topbar h1{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;}
-    .topbar p{color:var(--text2);font-size:.85rem;margin-top:2px;}
-    .topbar-right{display:flex;align-items:center;gap:12px;}
-    .theme-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:50%;width:36px;height:36px;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-    .theme-btn:hover{border-color:var(--green);color:var(--green);}
-    .content{padding:32px;flex:1;}
+/* ── SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
-    /* STEPS */
-    .steps-bar{display:flex;gap:0;margin-bottom:32px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-    .step{flex:1;padding:14px 16px;display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text2);cursor:pointer;transition:all .2s;border-right:1px solid var(--border);position:relative;}
-    .step:last-child{border-right:none;}
-    .step.active{background:linear-gradient(135deg,rgba(0,200,150,.12),rgba(30,111,217,.12));color:var(--green);}
-    .step.done{color:var(--green);}
-    .step-num{width:24px;height:24px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;flex-shrink:0;}
-    .step.active .step-num{background:var(--green);color:#000;}
-    .step.done .step-num{background:var(--green);color:#000;}
-    .step-label{font-weight:500;}
-    @media(max-width:768px){.step-label{display:none;}}
+/* ── TOPBAR */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  height:52px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  gap:12px;
+  backdrop-filter:blur(12px);
+}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
+.logo-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+}
+.logo-text{font-size:14px;font-weight:700;color:var(--text)}
+.logo-text span{color:var(--green)}
+.topbar-nav{display:flex;align-items:center;gap:4px;overflow-x:auto;flex:1;padding:0 8px}
+.topbar-nav::-webkit-scrollbar{height:0}
+.tnav{
+  padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;
+  color:var(--text2);cursor:pointer;white-space:nowrap;
+  border:1px solid transparent;transition:all var(--transition);
+  background:none;
+}
+.tnav:hover{color:var(--text);background:var(--bg3)}
+.tnav.active{color:var(--green);background:var(--green-dim);border-color:var(--green)}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.icon-btn{
+  width:32px;height:32px;border-radius:7px;
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:15px;transition:all var(--transition);
+}
+.icon-btn:hover{border-color:var(--green);color:var(--green)}
+.btn{
+  padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;
+  cursor:pointer;border:none;transition:all var(--transition);
+  display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{background:var(--bg3);border:1px solid var(--border);color:var(--text)}
+.btn-secondary:hover{border-color:var(--green);color:var(--green)}
+.btn-danger{background:var(--red-dim);border:1px solid var(--red);color:var(--red)}
+.btn-sm{padding:4px 10px;font-size:11px}
 
-    /* CARDS */
-    .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:20px;}
-    .card-title{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
-    .card-title .ico{font-size:1.2rem;}
+/* ── LAYOUT */
+.app{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 52px)}
+@media(max-width:768px){.app{grid-template-columns:1fr}}
 
-    /* FORM */
-    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;}
-    .form-group{display:flex;flex-direction:column;gap:6px;}
-    .form-group label{font-size:.8rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;}
-    .form-group input,.form-group select,.form-group textarea{
-      background:var(--bg3);border:1px solid var(--border);
-      color:var(--text);padding:11px 14px;border-radius:10px;
-      font-family:'Inter',sans-serif;font-size:.9rem;
-      transition:border-color .2s;outline:none;
-    }
-    .form-group input:focus,.form-group select:focus{border-color:var(--green);}
-    .form-group select option{background:var(--bg2);}
-    .form-hint{font-size:.75rem;color:var(--text2);margin-top:2px;}
+/* ── SIDEBAR */
+.sidebar{
+  background:var(--bg2);border-right:1px solid var(--border);
+  padding:16px 12px;position:sticky;top:52px;height:calc(100vh - 52px);
+  overflow-y:auto;
+}
+@media(max-width:768px){.sidebar{display:none}}
+.sidebar-section{margin-bottom:20px}
+.sidebar-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--text3);padding:0 8px;margin-bottom:6px;
+}
+.slink{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 8px;border-radius:7px;
+  color:var(--text2);cursor:pointer;font-size:12px;font-weight:500;
+  transition:all var(--transition);border:1px solid transparent;
+}
+.slink:hover{color:var(--text);background:var(--bg3)}
+.slink.active{color:var(--green);background:var(--green-dim);border-color:rgba(0,200,150,.2)}
+.slink-icon{font-size:14px;width:16px;text-align:center}
 
-    /* TOGGLE SYSTEM TYPE */
-    .sys-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
-    .sys-type-btn{padding:14px;border-radius:12px;background:var(--bg3);border:2px solid var(--border);color:var(--text2);cursor:pointer;text-align:center;transition:all .25s;font-family:'Inter',sans-serif;}
-    .sys-type-btn:hover{border-color:rgba(0,200,150,.4);}
-    .sys-type-btn.selected{border-color:var(--green);background:rgba(0,200,150,.1);color:var(--green);}
-    .sys-type-btn .type-icon{font-size:1.6rem;margin-bottom:6px;}
-    .sys-type-btn .type-name{font-weight:600;font-size:.85rem;}
-    .sys-type-btn .type-desc{font-size:.72rem;color:var(--text2);margin-top:3px;}
+/* ── MAIN */
+.main{padding:24px 20px 80px;overflow-x:hidden;max-width:100%}
+@media(max-width:768px){.main{padding:16px 12px 80px}}
 
-    /* BTN */
-    .btn-primary{background:linear-gradient(135deg,var(--green),var(--blue));color:white;border:none;padding:13px 28px;border-radius:var(--radius);font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:8px;}
-    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 30px var(--glow);}
-    .btn-secondary{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:13px 24px;border-radius:var(--radius);font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:500;cursor:pointer;transition:all .25s;}
-    .btn-secondary:hover{border-color:var(--green);}
+/* ── SECTION */
+.section{display:none}
+.section.active{display:block}
 
-    /* RESULTS */
-    .results-section{display:none;}
-    .results-section.visible{display:block;}
-    .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
-    .result-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;position:relative;overflow:hidden;transition:all .3s;}
-    .result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--blue));}
-    .result-card:hover{transform:translateY(-2px);border-color:rgba(0,200,150,.2);}
-    .result-label{font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
-    .result-value{font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700;color:var(--green);}
-    .result-unit{font-size:.85rem;color:var(--text2);font-weight:400;margin-left:4px;}
-    .result-note{font-size:.75rem;color:var(--text2);margin-top:6px;line-height:1.4;}
+/* ── PAGE TITLE */
+.page-title{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;flex-wrap:wrap;gap:12px;
+}
+.page-title h1{font-size:18px;font-weight:700;color:var(--text)}
+.page-title p{font-size:12px;color:var(--text2);margin-top:2px}
+.page-actions{display:flex;gap:8px;flex-wrap:wrap}
 
-    /* DETAIL TABLE */
-    .detail-table{width:100%;border-collapse:collapse;}
-    .detail-table th{text-align:left;padding:10px 14px;font-size:.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
-    .detail-table td{padding:12px 14px;font-size:.875rem;border-bottom:1px solid var(--border);}
-    .detail-table tr:last-child td{border-bottom:none;}
-    .detail-table tr:hover td{background:var(--bg3);}
-    .detail-table td:first-child{color:var(--text2);}
-    .detail-table td:last-child{font-weight:600;color:var(--text);}
-    .td-green{color:var(--green)!important;}
+/* ── CARD */
+.card{
+  background:var(--card-bg);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.card-sm{padding:14px 16px}
+.card-title{
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.card-title span{font-size:16px}
 
-    /* CABLE TABLE */
-    .cable-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center;font-size:.875rem;}
-    .cable-row.header{font-size:.75rem;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
-    .cable-row:last-child{border-bottom:none;}
+/* ── GRID */
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:900px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.g4,.g3,.g2{grid-template-columns:1fr}}
 
-    /* BADGE */
-    .badge-green{display:inline-block;background:rgba(0,200,150,.15);color:var(--green);border:1px solid rgba(0,200,150,.3);padding:2px 10px;border-radius:100px;font-size:.75rem;font-weight:600;}
-    .badge-blue{display:inline-block;background:rgba(30,111,217,.15);color:var(--blue);border:1px solid rgba(30,111,217,.3);padding:2px 10px;border-radius:100px;font-size:.75rem;font-weight:600;}
-    .badge-yellow{display:inline-block;background:rgba(255,193,7,.15);color:#ffc107;border:1px solid rgba(255,193,7,.3);padding:2px 10px;border-radius:100px;font-size:.75rem;font-weight:600;}
+/* ── FORM */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.field-row{display:flex;gap:8px}
+.field-row .field{flex:1;margin-bottom:0}
+input,select,textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius-xs);color:var(--text);padding:8px 10px;font-size:13px;
+  transition:border-color var(--transition);font-family:var(--font);
+  -webkit-appearance:none;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);background:var(--bg4)}
+select{cursor:pointer}
+select option{background:var(--bg2)}
+input[readonly]{opacity:.5;cursor:not-allowed}
+textarea{resize:vertical;min-height:70px}
+input.w60{width:64px}
+input.w80{width:80px}
+input.w100{width:100px}
 
-    /* ALERT */
-    .alert{padding:14px 18px;border-radius:10px;font-size:.875rem;line-height:1.5;margin-bottom:16px;}
-    .alert.info{background:rgba(30,111,217,.1);border:1px solid rgba(30,111,217,.25);color:var(--blue);}
-    .alert.warning{background:rgba(255,193,7,.1);border:1px solid rgba(255,193,7,.25);color:#ffc107;}
-    .alert.success{background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.25);color:var(--green);}
+/* ── RADIO TABS */
+.mode-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg3)}
+.mode-tab{
+  flex:1;padding:9px 16px;text-align:center;cursor:pointer;
+  font-size:12px;font-weight:600;color:var(--text2);
+  transition:all var(--transition);
+}
+.mode-tab.active{background:var(--green);color:#fff}
 
-    /* SAVE BTN */
-    .btn-save{background:linear-gradient(135deg,var(--green),var(--blue));color:white;border:none;padding:14px 32px;border-radius:var(--radius);font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:10px;box-shadow:0 0 20px var(--glow);}
-    .btn-save:hover{transform:translateY(-2px);box-shadow:0 0 40px var(--glow);}
+/* ── STAT CARDS */
+.stat{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:14px 16px;
+}
+.stat.green{border-color:var(--green);background:var(--green-dim)}
+.stat.blue{border-color:var(--blue);background:var(--blue-dim)}
+.stat.amber{border-color:var(--amber);background:var(--amber-dim)}
+.stat.purple{border-color:var(--purple);background:var(--purple-dim)}
+.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:4px}
+.stat-val{font-size:24px;font-weight:700;line-height:1;color:var(--text)}
+.stat.green .stat-val{color:var(--green)}
+.stat.blue .stat-val{color:var(--blue)}
+.stat.amber .stat-val{color:var(--amber)}
+.stat.purple .stat-val{color:var(--purple)}
+.stat-unit{font-size:11px;color:var(--text2);margin-top:3px}
+.stat-formula{font-size:10px;color:var(--text3);margin-top:6px;font-family:monospace;line-height:1.4}
 
-    /* MOBILE */
-    .mobile-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;background:var(--bg2);border:1px solid var(--border);color:var(--text);width:40px;height:40px;border-radius:10px;font-size:1.2rem;align-items:center;justify-content:center;cursor:pointer;}
-    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:45;backdrop-filter:blur(4px);}
-    @media(max-width:768px){
-      .sidebar{transform:translateX(-100%);}
-      .sidebar.open{transform:translateX(0);}
-      .sidebar-overlay.open{display:block;}
-      .main{margin-left:0;}
-      .mobile-toggle{display:flex;}
-      .topbar{padding:16px 16px 16px 64px;}
-      .content{padding:16px;}
-      .sys-type-grid{grid-template-columns:1fr;}
-    }
+/* ── TABLE */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{
+  padding:9px 12px;background:var(--bg3);color:var(--text2);
+  font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px;
+  border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;
+}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.tr-total td{font-weight:700;background:var(--bg3) !important}
+.tr-fs td{font-weight:600;color:var(--amber);background:var(--amber-dim) !important}
+.tr-result td{font-weight:700;color:var(--green)}
+td.r{text-align:right}
+td.c{text-align:center}
 
-    /* Toast */
-    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:12px 24px;border-radius:100px;font-size:.875rem;z-index:300;transition:transform .3s;box-shadow:var(--shadow);white-space:nowrap;}
-    .toast.show{transform:translateX(-50%) translateY(0);}
-    .toast.success{border-color:var(--green);color:var(--green);}
-    .toast.error{border-color:#ff4d6d;color:#ff4d6d;}
+/* ── INLINE TABLE INPUTS */
+td input,td select{background:var(--bg4);border:1px solid transparent;border-radius:4px;padding:5px 8px;font-size:12px;color:var(--text)}
+td input:focus,td select:focus{border-color:var(--green);outline:none}
 
-    /* Page loader */
-    .page-loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:500;transition:opacity .4s;}
-    .page-loader.done{opacity:0;pointer-events:none;}
-    .loader-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
-    @keyframes spin{to{transform:rotate(360deg);}}
+/* ── ADD ROW */
+.add-row-btn{
+  width:100%;padding:8px;margin-top:6px;
+  background:transparent;border:1px dashed var(--border);
+  border-radius:var(--radius-sm);color:var(--text3);cursor:pointer;
+  font-size:12px;transition:all var(--transition);
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.add-row-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-dim)}
 
-    .divider-line{height:1px;background:var(--border);margin:24px 0;}
-    .section-sub{color:var(--text2);font-size:.85rem;margin-bottom:20px;line-height:1.5;}
-  </style>
+/* ── DEL BTN */
+.del{
+  background:none;border:none;cursor:pointer;color:var(--text3);
+  font-size:14px;padding:3px 6px;border-radius:4px;
+  transition:all var(--transition);line-height:1;
+}
+.del:hover{color:var(--red);background:var(--red-dim)}
+.edit-btn{
+  background:none;border:none;cursor:pointer;color:var(--text3);
+  font-size:13px;padding:3px 6px;border-radius:4px;
+  transition:all var(--transition);
+}
+.edit-btn:hover{color:var(--blue);background:var(--blue-dim)}
+
+/* ── FORMULA BOX */
+.formula-box{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 14px;
+  font-family:monospace;font-size:12px;color:var(--text2);
+  line-height:1.7;margin-top:10px;
+}
+.formula-box .f-step{color:var(--green);font-weight:600}
+.formula-box .f-res{color:var(--amber)}
+
+/* ── BADGE */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.4px;
+}
+.badge-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green)}
+.badge-blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue)}
+.badge-amber{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber)}
+.badge-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red)}
+.badge-purple{background:var(--purple-dim);color:var(--purple);border:1px solid var(--purple)}
+
+/* ── DIVIDER */
+hr{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* ── ALERT */
+.alert{
+  padding:10px 14px;border-radius:var(--radius-sm);
+  font-size:12px;line-height:1.5;margin-bottom:14px;
+  display:flex;gap:10px;align-items:flex-start;
+}
+.alert-info{background:var(--blue-dim);border:1px solid var(--blue);color:var(--text)}
+.alert-warn{background:var(--amber-dim);border:1px solid var(--amber);color:var(--text)}
+.alert-ok{background:var(--green-dim);border:1px solid var(--green);color:var(--text)}
+.alert-icon{font-size:16px;flex-shrink:0;line-height:1.3}
+
+/* ── MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;
+  display:none;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;
+  width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+
+/* ── AI CHAT */
+.ai-messages{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:14px;
+  height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;
+  margin-bottom:10px;
+}
+.msg{max-width:85%;padding:10px 13px;border-radius:10px;font-size:13px;line-height:1.6}
+.msg.user{align-self:flex-end;background:var(--green);color:#fff;border-radius:10px 10px 2px 10px}
+.msg.ai{align-self:flex-start;background:var(--bg4);border:1px solid var(--border);border-radius:10px 10px 10px 2px}
+.msg-typing{align-self:flex-start;color:var(--text3);font-size:12px;padding:8px}
+.ai-input-row{display:flex;gap:8px}
+.ai-input-row input{flex:1}
+.ai-quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.ai-chip{
+  padding:4px 10px;border-radius:99px;font-size:11px;
+  background:var(--bg4);border:1px solid var(--border);color:var(--text2);
+  cursor:pointer;transition:all var(--transition);
+}
+.ai-chip:hover{border-color:var(--green);color:var(--green)}
+
+/* ── EQUIP CARD (catálogo) */
+.equip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.equip-card{
+  background:var(--card-bg);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:14px;
+  transition:border-color var(--transition);
+}
+.equip-card:hover{border-color:var(--green)}
+.equip-card.selected{border-color:var(--green);background:var(--green-dim)}
+.equip-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.equip-name{font-size:13px;font-weight:700;color:var(--text)}
+.equip-brand{font-size:10px;color:var(--text3);margin-top:2px}
+.equip-specs{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.equip-spec{
+  font-size:10px;padding:2px 7px;border-radius:99px;
+  background:var(--bg4);border:1px solid var(--border);color:var(--text2);
+}
+.equip-actions{display:flex;gap:6px;margin-top:10px}
+
+/* ── STEP INDICATOR */
+.steps{display:flex;gap:0;margin-bottom:24px;overflow-x:auto}
+.step{
+  flex:1;min-width:80px;text-align:center;padding:10px 6px;
+  font-size:11px;font-weight:600;color:var(--text3);
+  border-bottom:2px solid var(--border);transition:all var(--transition);
+  cursor:pointer;white-space:nowrap;
+}
+.step.active{color:var(--green);border-color:var(--green)}
+.step.done{color:var(--text2);border-color:var(--green)}
+.step-num{
+  display:flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--bg4);border:1px solid var(--border);
+  font-size:10px;margin:0 auto 4px;
+}
+.step.active .step-num{background:var(--green);border-color:var(--green);color:#fff}
+.step.done .step-num{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+
+/* ── TOOLTIP */
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;border-radius:50%;
+  background:var(--bg4);border:1px solid var(--border);
+  color:var(--text3);font-size:9px;cursor:help;font-weight:700;
+  margin-left:4px;position:relative;
+}
+.tip:hover::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--bg);border:1px solid var(--border);
+  color:var(--text);font-size:11px;padding:6px 10px;border-radius:6px;
+  white-space:nowrap;max-width:250px;white-space:normal;z-index:100;
+  box-shadow:var(--shadow);font-weight:400;
+}
+
+/* ── PROGRESS */
+.progress{height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-top:6px}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:99px;transition:width .5s ease}
+
+/* ── MOBILE FAB */
+.fab{
+  position:fixed;bottom:20px;right:20px;
+  width:48px;height:48px;border-radius:50%;
+  background:var(--green);border:none;color:#fff;
+  font-size:22px;cursor:pointer;z-index:150;
+  box-shadow:0 4px 20px rgba(0,200,150,.4);
+  display:none;align-items:center;justify-content:center;
+  transition:transform .2s;
+}
+.fab:active{transform:scale(.92)}
+@media(max-width:768px){.fab{display:flex}}
+
+/* ── CONFIRM MODAL */
+.confirm-modal{max-width:380px;text-align:center}
+.confirm-icon{font-size:36px;margin-bottom:12px}
+.confirm-title{font-size:16px;font-weight:700;margin-bottom:6px}
+.confirm-msg{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:4px}
+
+/* ── RECIBO MODE */
+.recibo-highlight{
+  background:linear-gradient(135deg,var(--green-dim),var(--blue-dim));
+  border:1px solid var(--green);border-radius:var(--radius);
+  padding:20px;margin-bottom:20px;
+}
+.recibo-highlight h3{color:var(--green);font-size:15px;margin-bottom:6px}
+.recibo-highlight p{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* ── RESULT BREAKDOWN */
+.breakdown{
+  background:var(--bg3);border-radius:var(--radius-sm);
+  padding:12px 16px;margin-top:10px;
+}
+.breakdown-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;
+}
+.breakdown-row:last-child{border-bottom:none;font-weight:700;color:var(--green);font-size:13px}
+.breakdown-row span:first-child{color:var(--text2)}
+.breakdown-row span:last-child{font-family:monospace}
+
+/* ── PRINT */
+@media print{
+  .topbar,.sidebar,.fab,.icon-btn,.btn-secondary,.add-row-btn,.del,.edit-btn,.ai-input-row,.ai-quick,.modal-overlay{display:none!important}
+  .app{grid-template-columns:1fr}
+  .card{break-inside:avoid;box-shadow:none}
+  body{background:#fff;color:#000}
+  [data-theme]{--bg:#fff;--bg2:#fff;--bg3:#f5f5f5;--text:#000;--text2:#555;--border:#ccc}
+}
+</style>
 </head>
 <body>
 
-<div class="page-loader" id="pageLoader">
-  <div style="text-align:center">
-    <div class="loader-spinner"></div>
-    <p style="color:var(--text2);font-size:.875rem;">Verificando acceso…</p>
+<!-- ═══════════════════════════════════════════ TOPBAR -->
+<header class="topbar">
+  <a class="logo" href="#">
+    <div class="logo-icon">☀️</div>
+    <span class="logo-text">Solar<span>Calc</span> Pro</span>
+  </a>
+  <nav class="topbar-nav">
+    <div class="tnav active" onclick="showSection('s-calc','s-calc')">🧮 Calculadora</div>
+    <div class="tnav" onclick="showSection('s-paneles-cat','s-paneles-cat')">☀️ Paneles</div>
+    <div class="tnav" onclick="showSection('s-inv-cat','s-inv-cat')">⚡ Inversores</div>
+    <div class="tnav" onclick="showSection('s-bat-cat','s-bat-cat')">🔋 Baterías</div>
+    <div class="tnav" onclick="showSection('s-aire','s-aire')">❄️ Aires A/C</div>
+    <div class="tnav" onclick="showSection('s-ai','s-ai')">🤖 Asesor IA</div>
+  </nav>
+  <div class="topbar-right">
+    <button class="icon-btn" id="themeBtn" title="Cambiar tema">🌙</button>
+    <button class="icon-btn" onclick="window.print()" title="Imprimir">🖨️</button>
   </div>
-</div>
+</header>
 
-<button class="mobile-toggle" id="mobileToggle">☰</button>
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<!-- ═══════════════════════════════════════════ APP -->
+<div class="app">
 
 <!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo">
-    <a href="index.html" class="logo-mark">
-      <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
-      Proyecto de Paneles
-    </a>
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Calculadora</div>
+    <div class="slink active" onclick="showSection('s-calc')"><span class="slink-icon">🧮</span>Dimensionador</div>
   </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section-label">Principal</div>
-    <a class="nav-item" href="dashboard.html"><span class="icon">🏠</span> Dashboard</a>
-    <a class="nav-item" href="projects.html"><span class="icon">📁</span> Proyectos</a>
-    <div class="nav-section-label">Herramientas</div>
-    <a class="nav-item active" href="calculator.html"><span class="icon">☀️</span> Calculadora Solar</a>
-    <a class="nav-item" href="costs.html"><span class="icon">💰</span> Presupuesto</a>
-    <div class="nav-section-label">Pro IA</div>
-    <a class="nav-item" href="ai-assistant.html" id="navAI"><span class="icon">🤖</span> Asistente IA</a>
-    <div class="nav-section-label">Cuenta</div>
-    <a class="nav-item" href="settings.html"><span class="icon">⚙️</span> Configuración</a>
-  </nav>
-  <div class="sidebar-bottom">
-    <div class="user-card">
-      <div class="user-avatar" id="sidebarAvatar">?</div>
-      <div class="user-info">
-        <div class="user-name" id="sidebarName">Cargando…</div>
-        <div class="user-plan" id="sidebarPlan">—</div>
-      </div>
-    </div>
-    <button class="btn-logout" onclick="logout()">← Cerrar sesión</button>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Equipos</div>
+    <div class="slink" onclick="showSection('s-paneles-cat')"><span class="slink-icon">☀️</span>Paneles FV</div>
+    <div class="slink" onclick="showSection('s-inv-cat')"><span class="slink-icon">⚡</span>Inversores</div>
+    <div class="slink" onclick="showSection('s-bat-cat')"><span class="slink-icon">🔋</span>Baterías</div>
+    <div class="slink" onclick="showSection('s-aire')"><span class="slink-icon">❄️</span>Aires A/C</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Herramientas</div>
+    <div class="slink" onclick="showSection('s-ai')"><span class="slink-icon">🤖</span>Asesor IA</div>
+  </div>
+  <hr>
+  <div style="font-size:10px;color:var(--text3);padding:0 8px;line-height:1.6">
+    <div style="font-weight:700;color:var(--text2);margin-bottom:4px">Resumen actual</div>
+    <div id="sb-resumen">Sin datos aún</div>
   </div>
 </aside>
 
 <!-- MAIN -->
-<div class="main">
-  <header class="topbar">
+<main class="main">
+
+<!-- ═══════════════ SECCIÓN: CALCULADORA -->
+<section class="section active" id="s-calc">
+  <div class="page-title">
     <div>
-      <h1>☀️ Calculadora Solar</h1>
-      <p>Dimensiona un sistema fotovoltaico completo</p>
+      <h1>Dimensionador Solar FV</h1>
+      <p>Calcula paneles, inversor, baterías y protecciones</p>
     </div>
-    <div class="topbar-right">
-      <button class="theme-btn" id="themeBtn">🌙</button>
+    <div class="page-actions">
+      <button class="btn btn-secondary btn-sm" onclick="resetCalc()">↺ Limpiar</button>
+      <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Exportar</button>
     </div>
-  </header>
+  </div>
 
-  <div class="content">
+  <!-- MODO -->
+  <div class="mode-tabs">
+    <div class="mode-tab active" id="tab-manual" onclick="setMode('manual')">📋 Análisis de Cargas</div>
+    <div class="mode-tab" id="tab-recibo" onclick="setMode('recibo')">📄 Desde Recibo</div>
+  </div>
 
-    <!-- STEPS BAR -->
-    <div class="steps-bar">
-      <div class="step active" id="step1" onclick="goStep(1)">
-        <div class="step-num">1</div><span class="step-label">Consumo</span>
-      </div>
-      <div class="step" id="step2" onclick="goStep(2)">
-        <div class="step-num">2</div><span class="step-label">Panel & Inversor</span>
-      </div>
-      <div class="step" id="step3" onclick="goStep(3)">
-        <div class="step-num">3</div><span class="step-label">Cableado</span>
-      </div>
-      <div class="step" id="step4" onclick="goStep(4)">
-        <div class="step-num">4</div><span class="step-label">Estructura</span>
-      </div>
-      <div class="step" id="step5" onclick="goStep(5)">
-        <div class="step-num">5</div><span class="step-label">Resultados</span>
-      </div>
+  <!-- ── MODO RECIBO -->
+  <div id="mode-recibo" style="display:none">
+    <div class="recibo-highlight">
+      <h3>⚡ Modo Rápido — Desde el Recibo de Energía</h3>
+      <p>Ingresa el consumo del recibo (kWh/mes) y automáticamente se dimensionará todo el sistema solar. Ideal para presupuestos rápidos en campo.</p>
     </div>
-
-    <!-- ══ PASO 1: CONSUMO ══ -->
-    <div id="panelStep1">
+    <div class="g2">
       <div class="card">
-        <div class="card-title"><span class="ico">⚡</span> Tipo de sistema</div>
-        <div class="sys-type-grid">
-          <div class="sys-type-btn selected" onclick="selectSysType(this,'ongrid')">
-            <div class="type-icon">🔌</div>
-            <div class="type-name">On-Grid</div>
-            <div class="type-desc">Conectado a la red eléctrica</div>
+        <div class="card-title"><span>📄</span> Datos del Recibo</div>
+        <div class="field">
+          <label>Consumo mensual (kWh/mes) <span class="tip" data-tip="Valor del recibo de energía. Se encuentra en la factura de EPM, Electricaribe, etc.">?</span></label>
+          <input type="number" id="r-kwh" placeholder="Ej: 280" oninput="calcDesdeRecibo()">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Horas Sol Pico (HSP)</label>
+            <input type="number" id="r-hsp" value="4.5" step="0.1" oninput="calcDesdeRecibo()">
           </div>
-          <div class="sys-type-btn" onclick="selectSysType(this,'offgrid')">
-            <div class="type-icon">🏕️</div>
-            <div class="type-name">Off-Grid</div>
-            <div class="type-desc">Autónomo con baterías</div>
+          <div class="field">
+            <label>Factor de seguridad</label>
+            <input type="number" id="r-fs" value="1.25" step="0.05" oninput="calcDesdeRecibo()">
           </div>
-          <div class="sys-type-btn" onclick="selectSysType(this,'hibrido')">
-            <div class="type-icon">⚡</div>
-            <div class="type-name">Híbrido</div>
-            <div class="type-desc">Red + baterías de respaldo</div>
-          </div>
+        </div>
+        <div class="formula-box" id="r-formula">Ingresa el consumo del recibo para ver los cálculos…</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🎯</span> Resultado Rápido</div>
+        <div id="r-results">
+          <div class="alert alert-info"><span class="alert-icon">ℹ️</span>Ingresa el kWh/mes del recibo para ver el dimensionamiento automático.</div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="card">
-        <div class="card-title"><span class="ico">📊</span> Consumo energético</div>
-        <p class="section-sub">Puedes ingresar el consumo de la factura o calcularlo por electrodomésticos.</p>
-
-        <div class="form-grid" style="margin-bottom:20px;">
-          <div class="form-group">
-            <label>Consumo mensual (kWh)</label>
-            <input type="number" id="consumoMensual" placeholder="ej: 350" min="0" oninput="syncConsumo()">
-            <span class="form-hint">Del recibo de energía</span>
-          </div>
-          <div class="form-group">
-            <label>Consumo diario (kWh)</label>
-            <input type="number" id="consumoDiario" placeholder="ej: 11.6" min="0" step="0.1" oninput="syncConsumoDiario()">
-            <span class="form-hint">Se calcula automáticamente</span>
-          </div>
-          <div class="form-group">
-            <label>Horas sol pico (HSP)</label>
-            <input type="number" id="hsp" value="4.5" min="1" max="8" step="0.1">
-            <span class="form-hint">Colombia: 4–5 HSP promedio</span>
-          </div>
-          <div class="form-group">
-            <label>Factor de pérdidas (%)</label>
-            <input type="number" id="perdidas" value="20" min="10" max="35">
-            <span class="form-hint">Temperatura, cableado, suciedad</span>
-          </div>
+  <!-- ── MODO MANUAL -->
+  <div id="mode-manual">
+    <!-- DATOS DEL PROYECTO -->
+    <div class="card">
+      <div class="card-title"><span>📍</span> Datos del Proyecto</div>
+      <div class="g3">
+        <div class="field">
+          <label>Nombre del proyecto / cliente</label>
+          <input type="text" id="p-nombre" placeholder="Casa de ..." oninput="updateSidebar()">
         </div>
-
-        <div class="divider-line"></div>
-        <div class="card-title" style="margin-bottom:12px;"><span class="ico">🏠</span> Calcular por electrodomésticos <span style="font-size:.75rem;color:var(--text2);font-weight:400;">(opcional)</span></div>
-
-        <div id="appliances">
-          <!-- filas dinámicas -->
+        <div class="field">
+          <label>Ciudad / Municipio</label>
+          <input type="text" id="p-ciudad" placeholder="Ej. Cúcuta" oninput="updateSidebar()">
         </div>
-        <button class="btn-secondary" style="margin-top:12px;" onclick="addAppliance()">+ Agregar electrodoméstico</button>
-
-        <div class="divider-line"></div>
-        <div style="display:flex;justify-content:flex-end;">
-          <button class="btn-primary" onclick="goStep(2)">Siguiente → Panel & Inversor</button>
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" id="p-fecha">
+        </div>
+        <div class="field">
+          <label>Latitud (°) <span class="tip" data-tip="Latitud geográfica del sitio. Cúcuta ≈ 7.9°, Bogotá ≈ 4.6°, Medellín ≈ 6.2°">?</span></label>
+          <input type="number" id="p-lat" value="7.9" step="0.01" oninput="calcAll()">
+        </div>
+        <div class="field">
+          <label>HSP (h pico/día) <span class="tip" data-tip="Horas de Sol Pico del sitio. Norte de Colombia: 4.0–5.5. Consulta IDEAM para tu ciudad.">?</span></label>
+          <input type="number" id="p-hsp" value="4.5" step="0.1" oninput="calcAll()">
+        </div>
+        <div class="field">
+          <label>Factor seguridad <span class="tip" data-tip="Factor de seguridad del sistema. 1.25 = 25% extra. Recomendado mínimo 1.25.">?</span></label>
+          <input type="number" id="p-fs" value="1.25" step="0.05" oninput="calcAll()">
         </div>
       </div>
     </div>
 
-    <!-- ══ PASO 2: PANEL & INVERSOR ══ -->
-    <div id="panelStep2" style="display:none;">
-      <div class="card">
-        <div class="card-title"><span class="ico">☀️</span> Especificaciones del panel solar</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Potencia del panel (Wp)</label>
-            <select id="panelWp" onchange="updatePanelCalc()">
-              <option value="250">250 Wp</option>
-              <option value="300">300 Wp</option>
-              <option value="350">350 Wp</option>
-              <option value="400" selected>400 Wp</option>
-              <option value="450">450 Wp</option>
-              <option value="500">500 Wp</option>
-              <option value="550">550 Wp</option>
-              <option value="600">600 Wp</option>
-              <option value="custom">Personalizado</option>
-            </select>
-          </div>
-          <div class="form-group" id="customWpGroup" style="display:none;">
-            <label>Potencia personalizada (Wp)</label>
-            <input type="number" id="customWp" placeholder="ej: 420" min="50" max="800">
-          </div>
-          <div class="form-group">
-            <label>Voltaje Voc (V)</label>
-            <input type="number" id="panelVoc" value="45" step="0.1" min="20" max="100">
-            <span class="form-hint">Voltaje circuito abierto</span>
-          </div>
-          <div class="form-group">
-            <label>Voltaje Vmp (V)</label>
-            <input type="number" id="panelVmp" value="37.5" step="0.1" min="15" max="90">
-            <span class="form-hint">Voltaje máxima potencia</span>
-          </div>
-          <div class="form-group">
-            <label>Corriente Isc (A)</label>
-            <input type="number" id="panelIsc" value="11.2" step="0.1" min="1" max="20">
-            <span class="form-hint">Corriente cortocircuito</span>
-          </div>
-          <div class="form-group">
-            <label>Corriente Imp (A)</label>
-            <input type="number" id="panelImp" value="10.5" step="0.1" min="1" max="20">
-            <span class="form-hint">Corriente máxima potencia</span>
-          </div>
-          <div class="form-group">
-            <label>Dimensiones panel</label>
-            <select id="panelDim">
-              <option value="1.7x1.0">1.70m × 1.00m (1.70 m²)</option>
-              <option value="1.96x0.99" selected>1.96m × 0.99m (1.94 m²)</option>
-              <option value="2.0x1.0">2.00m × 1.00m (2.00 m²)</option>
-              <option value="2.1x1.05">2.10m × 1.05m (2.20 m²)</option>
-              <option value="custom">Personalizado</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Temperatura máx. operación</label>
-            <input type="number" id="tempMax" value="45" min="30" max="70">
-            <span class="form-hint">Temp. ambiente máxima (°C)</span>
-          </div>
-        </div>
+    <!-- TABLA DE CARGAS -->
+    <div class="card">
+      <div class="card-title"><span>📋</span> Análisis de Cargas
+        <div class="badge badge-green" id="badge-cargas">0 cargas</div>
       </div>
-
-      <div class="card">
-        <div class="card-title"><span class="ico">🔋</span> Inversor</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Tipo de inversor</label>
-            <select id="inversorTipo" onchange="updateInversor()">
-              <option value="string">String (central)</option>
-              <option value="micro">Microinversor</option>
-              <option value="hibrido">Híbrido (con baterías)</option>
-              <option value="cargador">Inversor/cargador Off-Grid</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Voltaje DC entrada (V)</label>
-            <select id="inversorVdc">
-              <option value="24">24 V</option>
-              <option value="48">48 V</option>
-              <option value="360">360 V (string)</option>
-              <option value="600" selected>600 V (string)</option>
-              <option value="1000">1000 V (string)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Voltaje AC salida (V)</label>
-            <select id="inversorVac">
-              <option value="120">120 V monofásico</option>
-              <option value="220" selected>220 V monofásico</option>
-              <option value="380">380 V trifásico</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Eficiencia inversor (%)</label>
-            <input type="number" id="inversorEfic" value="97" min="80" max="99" step="0.5">
-          </div>
-        </div>
+      <div class="alert alert-info" style="margin-bottom:12px">
+        <span class="alert-icon">💡</span>
+        <div>Ingresa cada carga eléctrica. <strong>Consumo = Cantidad × Potencia × Horas/día</strong>. La potencia instalada = Cantidad × Potencia (para el inversor).</div>
       </div>
-
-      <div class="card" id="batteryCard" style="display:none;">
-        <div class="card-title"><span class="ico">🔋</span> Baterías <span style="font-size:.8rem;color:var(--text2);font-weight:400;">(Off-Grid / Híbrido)</span></div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Autonomía deseada (horas)</label>
-            <input type="number" id="batAutonomia" value="24" min="4" max="96">
-          </div>
-          <div class="form-group">
-            <label>Voltaje del banco (V)</label>
-            <select id="batVoltaje">
-              <option value="12">12 V</option>
-              <option value="24">24 V</option>
-              <option value="48" selected>48 V</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Tipo de batería</label>
-            <select id="batTipo">
-              <option value="agm">AGM (Profunda descarga)</option>
-              <option value="gel">Gel</option>
-              <option value="litio" selected>Litio (LiFePO4)</option>
-              <option value="ion">Li-Ion</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Profundidad descarga (%)</label>
-            <input type="number" id="batDod" value="80" min="30" max="100">
-            <span class="form-hint">AGM: 50%, Litio: 80-100%</span>
-          </div>
-        </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Descripción</th>
+              <th>Cant.</th>
+              <th>Potencia (W)</th>
+              <th>Horas/día</th>
+              <th>Consumo Wh/día</th>
+              <th>Pot. Instalada W</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cargas-tbody"></tbody>
+          <tfoot>
+            <tr class="tr-total">
+              <td colspan="5" style="text-align:right;padding-right:12px">TOTALES</td>
+              <td class="r" id="t-consumo">—</td>
+              <td class="r" id="t-potins">—</td>
+              <td></td>
+            </tr>
+            <tr class="tr-fs">
+              <td colspan="5" style="text-align:right;padding-right:12px">× <span id="lbl-fs">1.25</span> Factor de Seguridad</td>
+              <td class="r" id="t-consumo-fs">—</td>
+              <td class="r" id="t-potins-fs">—</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
-
-      <div style="display:flex;justify-content:space-between;margin-top:8px;">
-        <button class="btn-secondary" onclick="goStep(1)">← Atrás</button>
-        <button class="btn-primary" onclick="goStep(3)">Siguiente → Cableado</button>
-      </div>
+      <button class="add-row-btn" onclick="addCarga()">＋ Agregar carga</button>
     </div>
 
-    <!-- ══ PASO 3: CABLEADO ══ -->
-    <div id="panelStep3" style="display:none;">
-      <div class="card">
-        <div class="card-title"><span class="ico">🔌</span> Parámetros de cableado</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Distancia panel → inversor (m)</label>
-            <input type="number" id="distPanelInv" value="10" min="1" max="200">
-            <span class="form-hint">Cable DC (positivo + negativo)</span>
-          </div>
-          <div class="form-group">
-            <label>Distancia inversor → tablero (m)</label>
-            <input type="number" id="distInvTablero" value="5" min="1" max="100">
-            <span class="form-hint">Cable AC</span>
-          </div>
-          <div class="form-group">
-            <label>Caída de tensión máx. DC (%)</label>
-            <input type="number" id="caldTensionDC" value="1.5" min="0.5" max="5" step="0.1">
-            <span class="form-hint">Recomendado: ≤ 1.5%</span>
-          </div>
-          <div class="form-group">
-            <label>Caída de tensión máx. AC (%)</label>
-            <input type="number" id="caldTensionAC" value="2" min="0.5" max="5" step="0.1">
-            <span class="form-hint">Recomendado: ≤ 2%</span>
-          </div>
-          <div class="form-group">
-            <label>Tipo de cable DC</label>
-            <select id="tipoCableDC">
-              <option value="solar" selected>Cable Solar PV (doble aislamiento)</option>
-              <option value="thhn">THHN/THWN</option>
-              <option value="xlpe">XLPE</option>
+    <!-- RESUMEN DE CONSUMO -->
+    <div class="g4" id="consumo-stats"></div>
+
+    <hr>
+
+    <!-- PANELES -->
+    <div class="card">
+      <div class="card-title"><span>☀️</span> Dimensionamiento de Paneles
+        <div class="badge badge-green" id="badge-panel">Sin seleccionar</div>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="field">
+            <label>Panel seleccionado</label>
+            <select id="panel-sel" onchange="onPanelChange()">
+              <option value="">— Seleccionar del catálogo —</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Material conductor</label>
-            <select id="materialCable">
-              <option value="cobre" selected>Cobre</option>
-              <option value="aluminio">Aluminio</option>
-            </select>
+          <div class="field-row">
+            <div class="field">
+              <label>Potencia (Wp)</label>
+              <input type="number" id="pan-wp" value="480" oninput="calcAll()">
+            </div>
+            <div class="field">
+              <label>ISC (A)</label>
+              <input type="number" id="pan-isc" value="14.0" step="0.01" oninput="calcAll()">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>VOC (V)</label>
+              <input type="number" id="pan-voc" value="49.9" step="0.01" oninput="calcAll()">
+            </div>
+            <div class="field">
+              <label>VMPP (V)</label>
+              <input type="number" id="pan-vmpp" value="41.2" step="0.01" oninput="calcAll()">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label># Paralelo</label>
+              <input type="number" id="pan-par" value="1" min="1" oninput="calcAll()">
+            </div>
+            <div class="field">
+              <label># Serie</label>
+              <input type="number" id="pan-ser" value="2" min="1" oninput="calcAll()">
+            </div>
           </div>
         </div>
+        <div id="panel-results"></div>
       </div>
-
-      <div style="display:flex;justify-content:space-between;margin-top:8px;">
-        <button class="btn-secondary" onclick="goStep(2)">← Atrás</button>
-        <button class="btn-primary" onclick="goStep(4)">Siguiente → Estructura</button>
-      </div>
+      <div class="formula-box" id="panel-formula">Ingresa cargas para ver el cálculo de paneles…</div>
     </div>
 
-    <!-- ══ PASO 4: ESTRUCTURA ══ -->
-    <div id="panelStep4" style="display:none;">
-      <div class="card">
-        <div class="card-title"><span class="ico">🔩</span> Configuración de estructura</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Tipo de techo</label>
-            <select id="tipoTecho">
-              <option value="lamina">Lámina (metálica)</option>
-              <option value="teja">Teja (cerámica / fibrocemento)</option>
-              <option value="plana" selected>Plana (concreto)</option>
-              <option value="suelo">Suelo / estructura libre</option>
+    <!-- INVERSOR -->
+    <div class="card">
+      <div class="card-title"><span>⚡</span> Selección de Inversor
+        <div class="badge badge-blue" id="badge-inv">Sin seleccionar</div>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="field">
+            <label>Inversor seleccionado</label>
+            <select id="inv-sel" onchange="onInvChange()">
+              <option value="">— Seleccionar del catálogo —</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Inclinación deseada (°)</label>
-            <input type="number" id="inclinacion" value="15" min="5" max="45">
-            <span class="form-hint">Colombia: 10–20° recomendado</span>
+          <div class="field-row">
+            <div class="field">
+              <label>Tipo de inversor</label>
+              <select id="inv-tipo">
+                <option value="hibrido">Híbrido (con batería)</option>
+                <option value="ongrid">On-Grid (red)</option>
+                <option value="offgrid">Off-Grid (aislado)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Potencia comercial (W)</label>
+              <input type="number" id="inv-pot" value="5000" oninput="calcAll()">
+            </div>
           </div>
-          <div class="form-group">
-            <label>Filas de paneles</label>
-            <input type="number" id="filasPanel" value="1" min="1" max="20" oninput="calcClamps()">
-          </div>
-          <div class="form-group">
-            <label>Paneles por fila</label>
-            <input type="number" id="panelesFilaManual" value="0" min="0" placeholder="Auto" oninput="calcClamps()">
-            <span class="form-hint">0 = calculado automáticamente</span>
-          </div>
-          <div class="form-group">
-            <label>Tipo de riel</label>
-            <select id="tipoRiel">
-              <option value="aluminio40" selected>Aluminio 40×40mm</option>
-              <option value="aluminio35">Aluminio 35×35mm</option>
-              <option value="galvanizado">Galvanizado 40×40mm</option>
-            </select>
+          <div class="field-row">
+            <div class="field">
+              <label>Voltaje entrada DC (V)</label>
+              <input type="number" id="inv-vdc" value="120-450" oninput="calcAll()">
+            </div>
+            <div class="field">
+              <label>Voltaje batería (V)</label>
+              <select id="inv-vbat" onchange="calcAll()">
+                <option value="12">12 V (0–2 kW)</option>
+                <option value="24">24 V (2–4 kW)</option>
+                <option value="48" selected>48 V (4+ kW)</option>
+              </select>
+            </div>
           </div>
         </div>
+        <div id="inv-results"></div>
       </div>
-
-      <div style="display:flex;justify-content:space-between;margin-top:8px;">
-        <button class="btn-secondary" onclick="goStep(3)">← Atrás</button>
-        <button class="btn-primary" onclick="calcularTodo()">⚡ Calcular sistema completo</button>
-      </div>
+      <div class="formula-box" id="inv-formula">Selecciona un inversor o ingresa sus datos…</div>
     </div>
 
-    <!-- ══ PASO 5: RESULTADOS ══ -->
-    <div id="panelStep5" style="display:none;">
-
-      <!-- RESUMEN PRINCIPAL -->
-      <div class="results-grid" id="mainResults"></div>
-
-      <!-- PANELES -->
-      <div class="card">
-        <div class="card-title"><span class="ico">☀️</span> Paneles solares</div>
-        <div id="panelesResult"></div>
+    <!-- BATERÍAS -->
+    <div class="card">
+      <div class="card-title"><span>🔋</span> Dimensionamiento de Baterías
+        <small style="font-size:10px;color:var(--text3);font-weight:400;margin-left:8px">Opcional — si el sistema necesita almacenamiento</small>
       </div>
-
-      <!-- INVERSOR -->
-      <div class="card">
-        <div class="card-title"><span class="ico">⚙️</span> Inversor recomendado</div>
-        <div id="inversorResult"></div>
-      </div>
-
-      <!-- BATERIAS -->
-      <div class="card" id="bateriasCard" style="display:none;">
-        <div class="card-title"><span class="ico">🔋</span> Banco de baterías</div>
-        <div id="bateriasResult"></div>
-      </div>
-
-      <!-- CABLEADO -->
-      <div class="card">
-        <div class="card-title"><span class="ico">🔌</span> Cableado completo</div>
-        <div id="cableadoResult"></div>
-      </div>
-
-      <!-- PROTECCIONES -->
-      <div class="card">
-        <div class="card-title"><span class="ico">⚡</span> Protecciones eléctricas y tablero</div>
-        <div id="proteccionesResult"></div>
-      </div>
-
-      <!-- ESTRUCTURA -->
-      <div class="card">
-        <div class="card-title"><span class="ico">🔩</span> Estructura y soportes</div>
-        <div id="estructuraResult"></div>
-      </div>
-
-      <!-- ADVERTENCIAS -->
-      <div id="advertencias"></div>
-
-      <!-- GUARDAR -->
-      <div class="card" style="text-align:center;">
-        <div class="card-title" style="justify-content:center;"><span class="ico">💾</span> Guardar resultados</div>
-        <p style="color:var(--text2);font-size:.875rem;margin-bottom:20px;">Asocia este cálculo a un proyecto de cliente o guárdalo como nuevo.</p>
-        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-          <button class="btn-save" onclick="saveCalc()">💾 Guardar en proyecto</button>
-          <button class="btn-secondary" onclick="irCostos()">💰 Generar presupuesto →</button>
-          <button class="btn-secondary" onclick="recalcular()">🔄 Recalcular</button>
+      <div class="field-row" style="margin-bottom:14px">
+        <div class="field">
+          <label>Tipo de batería</label>
+          <select id="bat-tipo" onchange="calcAll()">
+            <option value="gel">GEL (DOD 50%)</option>
+            <option value="agm">AGM (DOD 50%)</option>
+            <option value="litio">Litio LiFePO₄ (DOD 90%)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Batería seleccionada</label>
+          <select id="bat-sel" onchange="onBatChange()">
+            <option value="">— Seleccionar del catálogo —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Autonomía deseada (días)</label>
+          <input type="number" id="bat-dias" value="1" min="0.5" step="0.5" oninput="calcAll()">
         </div>
       </div>
+      <div id="bat-results"></div>
+      <div class="formula-box" id="bat-formula">Configura las baterías para ver el cálculo…</div>
+    </div>
 
-    </div><!-- /panelStep5 -->
+    <!-- PROTECCIONES Y CABLES -->
+    <div class="card">
+      <div class="card-title"><span>🔌</span> Protecciones y Calibre de Cables</div>
+      <div class="alert alert-warn" style="margin-bottom:12px">
+        <span class="alert-icon">⚠️</span>
+        <div><strong>Regla DC:</strong> Breaker DC → siguiente valor comercial <em>por encima</em> de ISC×F.S. | DPS → encima del VOC×F.S. | <strong>Regla AC:</strong> Breaker → siguiente valor comercial <em>por debajo</em> del resultado.</div>
+      </div>
+      <div id="prot-results"></div>
+    </div>
 
-  </div><!-- /content -->
-</div><!-- /main -->
+    <!-- RESUMEN FINAL -->
+    <div class="card" id="resumen-final" style="display:none">
+      <div class="card-title"><span>✅</span> Resumen del Dimensionamiento</div>
+      <div id="resumen-content"></div>
+    </div>
 
-<div class="toast" id="toast"></div>
+  </div><!-- /mode-manual -->
+</section>
 
-<!-- FIREBASE -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, addDoc, collection, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<!-- ═══════════════ SECCIÓN: CATÁLOGO PANELES -->
+<section class="section" id="s-paneles-cat">
+  <div class="page-title">
+    <div><h1>Catálogo de Paneles FV</h1><p>Gestiona los paneles disponibles — agrega, edita o elimina</p></div>
+    <div class="page-actions">
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-panel')">＋ Nuevo Panel</button>
+    </div>
+  </div>
+  <div class="alert alert-info" style="margin-bottom:16px">
+    <span class="alert-icon">ℹ️</span>
+    <div>La base de datos incluye paneles comerciales comunes en Colombia. Puedes agregar nuevos modelos conforme el mercado evoluciona.</div>
+  </div>
+  <div class="equip-grid" id="panel-catalog-grid"></div>
+</section>
 
-  const firebaseConfig = {
-    apiKey:"AIzaSyAuM0Bqk1vMgUEPZRmGucWCCaisYc4HkzA",
-    authDomain:"proyecto-de-paneles.firebaseapp.com",
-    projectId:"proyecto-de-paneles",
-    storageBucket:"proyecto-de-paneles.firebasestorage.app",
-    messagingSenderId:"879834807516",
-    appId:"1:879834807516:web:1c6710cde40a2cbb69c819"
-  };
+<!-- ═══════════════ SECCIÓN: CATÁLOGO INVERSORES -->
+<section class="section" id="s-inv-cat">
+  <div class="page-title">
+    <div><h1>Catálogo de Inversores</h1><p>Growatt, Deye, Must, Felicity y más</p></div>
+    <div class="page-actions">
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-inv')">＋ Nuevo Inversor</button>
+    </div>
+  </div>
+  <div class="equip-grid" id="inv-catalog-grid"></div>
+</section>
 
-  const app  = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
+<!-- ═══════════════ SECCIÓN: CATÁLOGO BATERÍAS -->
+<section class="section" id="s-bat-cat">
+  <div class="page-title">
+    <div><h1>Catálogo de Baterías</h1><p>GEL, AGM, Litio LiFePO₄</p></div>
+    <div class="page-actions">
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-bat')">＋ Nueva Batería</button>
+    </div>
+  </div>
+  <div class="equip-grid" id="bat-catalog-grid"></div>
+</section>
 
-  onAuthStateChanged(auth, async user => {
-    if (!user) { window.location.href = "index.html"; return; }
-    const userSnap = await getDoc(doc(db,"users",user.uid));
-    const plan = userSnap.exists() ? userSnap.data().plan : "free";
+<!-- ═══════════════ SECCIÓN: AIRES A/C -->
+<section class="section" id="s-aire">
+  <div class="page-title">
+    <div><h1>Base de Datos — Aires Acondicionados</h1><p>Calcula la carga real de AC para dimensionar el sistema solar</p></div>
+    <div class="page-actions">
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-aire')">＋ Nuevo equipo AC</button>
+    </div>
+  </div>
 
-    if (plan === "free") {
-      document.getElementById("pageLoader").classList.add("done");
-      showToast("⚠️ Necesitas plan Básico o superior","error");
-      setTimeout(()=>window.location.href="dashboard.html",2000);
-      return;
-    }
+  <div class="card">
+    <div class="card-title"><span>🧮</span> Calculadora BTU → Watts</div>
+    <div class="alert alert-warn" style="margin-bottom:12px">
+      <span class="alert-icon">⚡</span>
+      <div><strong>Factor de arranque:</strong> Los aires de tipo ON/OFF tienen un pico de arranque de 3–5× la potencia nominal. Los inversores necesitan soportar ese pico. Los AC Inverter (Inverter) arrancan suave — factor ×1.3.</div>
+    </div>
+    <div class="g3">
+      <div class="field">
+        <label>BTU del equipo</label>
+        <select id="aire-btu" onchange="calcAire()">
+          <option value="9000">9.000 BTU — 1 Ton</option>
+          <option value="12000" selected>12.000 BTU — 1 Ton</option>
+          <option value="18000">18.000 BTU — 1.5 Ton</option>
+          <option value="24000">24.000 BTU — 2 Ton</option>
+          <option value="36000">36.000 BTU — 3 Ton</option>
+          <option value="48000">48.000 BTU — 4 Ton</option>
+          <option value="60000">60.000 BTU — 5 Ton</option>
+          <option value="custom">Personalizado…</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tipo de compresor</label>
+        <select id="aire-tipo" onchange="calcAire()">
+          <option value="inverter">Inverter (arranque suave ×1.3)</option>
+          <option value="onoff">ON/OFF (arranque pesado ×3.5)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Horas de uso por día</label>
+        <input type="number" id="aire-horas" value="8" step="0.5" oninput="calcAire()">
+      </div>
+    </div>
+    <div id="aire-calc-result"></div>
+  </div>
 
-    window._uid  = user.uid;
-    window._plan = plan;
-    const firstName = (user.displayName||"Usuario").split(" ")[0];
-    document.getElementById("sidebarName").textContent = user.displayName||"Usuario";
-    document.getElementById("sidebarPlan").textContent = plan.toUpperCase();
-    const av = document.getElementById("sidebarAvatar");
-    if (user.photoURL) av.innerHTML=`<img src="${user.photoURL}" alt="">`;
-    else av.textContent = firstName.charAt(0).toUpperCase();
+  <div class="card">
+    <div class="card-title"><span>📋</span> Equipos AC registrados</div>
+    <div class="equip-grid" id="aire-grid"></div>
+  </div>
+</section>
 
-    if (plan !== "pro") {
-      const navAI = document.getElementById("navAI");
-      navAI.onclick = e => { e.preventDefault(); showToast("⚠️ Necesitas plan Pro"); };
-    }
-    document.getElementById("pageLoader").classList.add("done");
-  });
+<!-- ═══════════════ SECCIÓN: IA -->
+<section class="section" id="s-ai">
+  <div class="page-title">
+    <div><h1>Asesor IA Solar</h1><p>Consultas especializadas en instalación y mantenimiento FV</p></div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div class="card-title"><span>🤖</span> Chat con el Asesor</div>
+        <div class="ai-quick" id="ai-quick-btns">
+          <div class="ai-chip" onclick="aiQuick('¿Qué cable uso para conectar los paneles al inversor?')">🔌 Cables DC</div>
+          <div class="ai-chip" onclick="aiQuick('¿Cómo elegir el inversor correcto para mi sistema?')">⚡ Inversor</div>
+          <div class="ai-chip" onclick="aiQuick('¿Cada cuánto hay que hacerle mantenimiento a los paneles solares?')">🔧 Mantenimiento</div>
+          <div class="ai-chip" onclick="aiQuick('¿Puedo poner un aire acondicionado con un sistema solar?')">❄️ AC Solar</div>
+          <div class="ai-chip" onclick="aiQuick('¿Qué diferencia hay entre batería GEL, AGM y Litio?')">🔋 Baterías</div>
+          <div class="ai-chip" onclick="aiQuick('¿Qué protecciones son obligatorias en una instalación solar?')">🛡️ Protecciones</div>
+        </div>
+        <div class="ai-messages" id="ai-messages">
+          <div class="msg ai">¡Hola! Soy tu asesor especializado en sistemas fotovoltaicos. Pregúntame sobre instalación, mantenimiento, dimensionamiento, normas RETIE, equipos o cualquier duda técnica. ¿En qué te ayudo? ☀️</div>
+        </div>
+        <div class="ai-input-row">
+          <input type="text" id="ai-input" placeholder="Escribe tu consulta técnica…" onkeydown="if(event.key==='Enter')sendAI()">
+          <button class="btn btn-primary" onclick="sendAI()">Enviar</button>
+        </div>
+      </div>
+      <div class="card card-sm">
+        <div class="card-title"><span>🔑</span> API Key de Claude</div>
+        <div class="field">
+          <label>Cloudflare Worker URL</label>
+          <input type="text" id="ai-worker-url" value="https://paneles-ai-proxy.julianrene113.workers.dev" placeholder="URL del proxy">
+        </div>
+        <div class="alert alert-ok" style="margin-top:8px">
+          <span class="alert-icon">🔒</span>
+          <div style="font-size:11px">La API key nunca se expone en el frontend. Las consultas van a través de tu Cloudflare Worker.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title"><span>📚</span> Base de conocimiento local</div>
+        <div class="alert alert-info" style="margin-bottom:12px">
+          <span class="alert-icon">💡</span><div style="font-size:11px">Esta base de datos responde sin consumir API. Solo consultas complejas van al modelo.</div>
+        </div>
+        <div id="kb-topics"></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  window.logout = async () => { await signOut(auth); window.location.href="index.html"; };
+</main><!-- /main -->
+</div><!-- /app -->
 
-  // GUARDAR CÁLCULO
-  window.saveCalcFirebase = async function(data) {
-    try {
-      await addDoc(collection(db,"calculations"), {
-        uid: window._uid,
-        ...data,
-        createdAt: serverTimestamp()
-      });
-      showToast("✅ Cálculo guardado","success");
-    } catch(e) { showToast("❌ Error al guardar","error"); }
-  };
-</script>
+<!-- ═══════════════════════════════════════════ MODALS -->
 
+<!-- CONFIRM DELETE -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal confirm-modal">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">¿Eliminar este elemento?</div>
+    <div class="confirm-msg" id="confirm-msg">Esta acción no se puede deshacer.</div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-confirm')">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PANEL -->
+<div class="modal-overlay" id="modal-add-panel">
+  <div class="modal">
+    <div class="modal-title" id="add-panel-title">➕ Nuevo Panel FV</div>
+    <div class="g2">
+      <div class="field"><label>Marca</label><input type="text" id="np-marca" placeholder="Ej. JA Solar"></div>
+      <div class="field"><label>Modelo</label><input type="text" id="np-modelo" placeholder="Ej. JAM72S30-530"></div>
+      <div class="field"><label>Potencia (Wp)</label><input type="number" id="np-wp" placeholder="530"></div>
+      <div class="field"><label>Tipo de celda</label>
+        <select id="np-tipo">
+          <option>Monocristalino PERC</option>
+          <option>Monocristalino TOPCon</option>
+          <option>Bifacial TOPCon</option>
+          <option>Policristalino</option>
+          <option>HJT</option>
+        </select>
+      </div>
+      <div class="field"><label>ISC (A)</label><input type="number" id="np-isc" placeholder="14.0" step="0.01"></div>
+      <div class="field"><label>VOC (V)</label><input type="number" id="np-voc" placeholder="49.9" step="0.01"></div>
+      <div class="field"><label>VMPP (V)</label><input type="number" id="np-vmpp" placeholder="41.2" step="0.01"></div>
+      <div class="field"><label>IMPP (A)</label><input type="number" id="np-impp" placeholder="12.9" step="0.01"></div>
+      <div class="field"><label>Eficiencia (%)</label><input type="number" id="np-ef" placeholder="21.3" step="0.1"></div>
+      <div class="field"><label>Garantía producto (años)</label><input type="number" id="np-gar" placeholder="12"></div>
+    </div>
+    <div class="field"><label>Notas</label><textarea id="np-notas" placeholder="Características adicionales…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-panel')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePanel()">Guardar Panel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD INVERSOR -->
+<div class="modal-overlay" id="modal-add-inv">
+  <div class="modal">
+    <div class="modal-title" id="add-inv-title">➕ Nuevo Inversor</div>
+    <div class="g2">
+      <div class="field"><label>Marca</label><input type="text" id="ni-marca" placeholder="Ej. Growatt"></div>
+      <div class="field"><label>Modelo</label><input type="text" id="ni-modelo" placeholder="Ej. SPH5000TL BL-UP"></div>
+      <div class="field"><label>Potencia nominal (W)</label><input type="number" id="ni-pot" placeholder="5000"></div>
+      <div class="field"><label>Tipo</label>
+        <select id="ni-tipo">
+          <option value="hibrido">Híbrido</option>
+          <option value="ongrid">On-Grid</option>
+          <option value="offgrid">Off-Grid</option>
+        </select>
+      </div>
+      <div class="field"><label>Voltaje batería (V)</label>
+        <select id="ni-vbat">
+          <option value="12">12 V</option>
+          <option value="24">24 V</option>
+          <option value="48" selected>48 V</option>
+          <option value="none">N/A (sin batería)</option>
+        </select>
+      </div>
+      <div class="field"><label>Fases</label>
+        <select id="ni-fases">
+          <option value="1">Monofásico</option>
+          <option value="3">Trifásico</option>
+        </select>
+      </div>
+      <div class="field"><label>MPPT</label><input type="number" id="ni-mppt" placeholder="2"></div>
+      <div class="field"><label>Eficiencia (%)</label><input type="number" id="ni-ef" placeholder="97.5" step="0.1"></div>
+      <div class="field"><label>VDC máx (V)</label><input type="number" id="ni-vdc" placeholder="500"></div>
+      <div class="field"><label>Garantía (años)</label><input type="number" id="ni-gar" placeholder="5"></div>
+    </div>
+    <div class="field"><label>Notas</label><textarea id="ni-notas" placeholder="Compatibilidad, características…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-inv')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveInv()">Guardar Inversor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BATERÍA -->
+<div class="modal-overlay" id="modal-add-bat">
+  <div class="modal">
+    <div class="modal-title" id="add-bat-title">➕ Nueva Batería</div>
+    <div class="g2">
+      <div class="field"><label>Marca</label><input type="text" id="nb-marca" placeholder="Ej. Tensite"></div>
+      <div class="field"><label>Modelo</label><input type="text" id="nb-modelo" placeholder="Ej. DG12-200"></div>
+      <div class="field"><label>Tecnología</label>
+        <select id="nb-tipo">
+          <option value="gel">GEL (DOD 50%)</option>
+          <option value="agm">AGM (DOD 50%)</option>
+          <option value="litio">Litio LiFePO₄ (DOD 90%)</option>
+          <option value="plomo">Plomo-Ácido (DOD 30%)</option>
+        </select>
+      </div>
+      <div class="field"><label>Voltaje (V)</label>
+        <select id="nb-v">
+          <option value="6">6 V</option>
+          <option value="12" selected>12 V</option>
+          <option value="24">24 V</option>
+          <option value="48">48 V</option>
+        </select>
+      </div>
+      <div class="field"><label>Capacidad (Ah)</label><input type="number" id="nb-ah" placeholder="200"></div>
+      <div class="field"><label>Ciclos de vida</label><input type="number" id="nb-ciclos" placeholder="1200"></div>
+      <div class="field"><label>Peso (kg)</label><input type="number" id="nb-kg" placeholder="58" step="0.1"></div>
+      <div class="field"><label>Garantía (años)</label><input type="number" id="nb-gar" placeholder="2"></div>
+    </div>
+    <div class="field"><label>Notas</label><textarea id="nb-notas" placeholder="DOD real, temperatura, BMS…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-bat')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBat()">Guardar Batería</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD AIRE -->
+<div class="modal-overlay" id="modal-add-aire">
+  <div class="modal">
+    <div class="modal-title" id="add-aire-title">➕ Nuevo equipo AC</div>
+    <div class="g2">
+      <div class="field"><label>Marca</label><input type="text" id="na-marca" placeholder="LG, Samsung, Electrolux…"></div>
+      <div class="field"><label>Modelo</label><input type="text" id="na-modelo" placeholder="Referencia del equipo"></div>
+      <div class="field"><label>BTU</label><input type="number" id="na-btu" placeholder="12000"></div>
+      <div class="field"><label>Tipo compresor</label>
+        <select id="na-tipo">
+          <option value="inverter">Inverter</option>
+          <option value="onoff">ON/OFF</option>
+        </select>
+      </div>
+      <div class="field"><label>Potencia nominal (W)</label><input type="number" id="na-pot" placeholder="1200"></div>
+      <div class="field"><label>Potencia máx consumo (W)</label><input type="number" id="na-pot-max" placeholder="1400"></div>
+      <div class="field"><label>Potencia arranque (W)</label><input type="number" id="na-pot-arr" placeholder="4200"></div>
+      <div class="field"><label>SEER / EER</label><input type="number" id="na-seer" placeholder="14.5" step="0.1"></div>
+    </div>
+    <div class="field"><label>Notas</label><textarea id="na-notas" placeholder="Observaciones, tensión, etc."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-aire')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAire()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SCRIPT -->
 <script>
-/* ══════════════════════════════════════════
-   CALCULADORA — LÓGICA COMPLETA
-══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+   BASE DE DATOS — EQUIPOS INICIALES
+══════════════════════════════════════════════════════ */
+const DB_KEY = 'solarcalc_db';
 
-let currentStep = 1;
-let sysType = "ongrid";
-let lastResults = null;
+const defaultDB = {
+  paneles: [
+    { id:'p1', marca:'JA Solar', modelo:'JAM72S30-530/MR', wp:530, tipo:'Monocristalino PERC', isc:13.61, voc:49.14, vmpp:41.30, impp:12.83, ef:21.5, gar:12, notas:'Muy común en Colombia. Alta eficiencia, precio competitivo.' },
+    { id:'p2', marca:'JA Solar', modelo:'JAM66S30-480/MR', wp:480, tipo:'Monocristalino PERC', isc:13.20, voc:45.40, vmpp:37.60, impp:12.77, ef:20.8, gar:12, notas:'Formato mediano. Ideal para techos residenciales.' },
+    { id:'p3', marca:'Longi', modelo:'LR5-72HTH-620M', wp:620, tipo:'Monocristalino PERC Hi-MO6', isc:18.70, voc:43.98, vmpp:37.30, impp:16.63, ef:22.0, gar:12, notas:'Alta potencia. Muy usado en sistemas comerciales.' },
+    { id:'p4', marca:'Longi', modelo:'LR5-54HTH-430M', wp:430, tipo:'Monocristalino Hi-MO6', isc:13.95, voc:37.90, vmpp:31.50, impp:13.65, ef:21.3, gar:12, notas:'Formato compacto. Excelente para techos pequeños.' },
+    { id:'p5', marca:'Risen', modelo:'RSM110-8-550BMDG', wp:550, tipo:'Bifacial TOPCon', isc:13.97, voc:49.60, vmpp:41.60, impp:13.22, ef:21.2, gar:12, notas:'Bifacial. Genera energía por ambas caras. +10-15% extra en instalación elevada.' },
+    { id:'p6', marca:'Canadian Solar', modelo:'CS6W-550MS', wp:550, tipo:'Monocristalino PERC', isc:13.97, voc:49.40, vmpp:41.30, impp:13.32, ef:21.2, gar:12, notas:'Marca reconocida. Buena garantía y soporte técnico.' },
+    { id:'p7', marca:'Jinko Solar', modelo:'JKM620N-78HL4', wp:620, tipo:'Monocristalino TOPCon N-type', isc:18.81, voc:41.63, vmpp:34.44, impp:17.99, ef:22.9, gar:12, notas:'Tecnología TOPCon última generación. Alta eficiencia y baja degradación.' },
+    { id:'p8', marca:'Jinko Solar', modelo:'JKM480N-60HL4', wp:480, tipo:'Monocristalino TOPCon N-type', isc:13.61, voc:43.88, vmpp:36.44, impp:13.18, ef:22.0, gar:12, notas:'Formato estándar residencial. Eficiencia superior al PERC.' },
+  ],
+  inversores: [
+    { id:'i1', marca:'Growatt', modelo:'SPH5000TL BL-UP', pot:5000, tipo:'hibrido', vbat:48, fases:1, mppt:2, ef:97.5, vdc:500, gar:10, notas:'Inversor híbrido más vendido en Colombia. Compatible con Growatt ARK.' },
+    { id:'i2', marca:'Growatt', modelo:'SPH8000TL BL-UP', pot:8000, tipo:'hibrido', vbat:48, fases:1, mppt:2, ef:97.6, vdc:500, gar:10, notas:'Para sistemas residenciales medianos. Muy confiable.' },
+    { id:'i3', marca:'Growatt', modelo:'MIN3000TL-X', pot:3000, tipo:'ongrid', vbat:'none', fases:1, mppt:2, ef:98.2, vdc:500, gar:2, notas:'On-Grid económico. Sin almacenamiento. Conexión a red.' },
+    { id:'i4', marca:'Growatt', modelo:'MIN6000TL-X', pot:6000, tipo:'ongrid', vbat:'none', fases:1, mppt:2, ef:98.0, vdc:600, gar:2, notas:'On-Grid 6kW monofásico.' },
+    { id:'i5', marca:'Deye', modelo:'SUN-5K-SG03LP1-EU', pot:5000, tipo:'hibrido', vbat:48, fases:1, mppt:2, ef:97.7, vdc:500, gar:5, notas:'Híbrido bifásico muy popular. Compatible con baterías de múltiples marcas.' },
+    { id:'i6', marca:'Deye', modelo:'SUN-8K-SG03LP1-EU', pot:8000, tipo:'hibrido', vbat:48, fases:1, mppt:2, ef:97.8, vdc:500, gar:5, notas:'8kW híbrido. Excelente para hogares con AC.' },
+    { id:'i7', marca:'Must Solar', modelo:'PV1800-VPK Series 5kW', pot:5000, tipo:'offgrid', vbat:48, fases:1, mppt:1, ef:93.0, vdc:450, gar:2, notas:'Off-Grid económico. Popular en zonas rurales sin red.' },
+    { id:'i8', marca:'Felicity Solar', modelo:'FL5500-48', pot:5500, tipo:'offgrid', vbat:48, fases:1, mppt:2, ef:94.0, vdc:500, gar:3, notas:'Off-Grid con MPPT doble. Buena relación calidad-precio.' },
+    { id:'i9', marca:'Huawei', modelo:'SUN2000-5KTL-L1', pot:5000, tipo:'ongrid', vbat:'none', fases:1, mppt:2, ef:98.6, vdc:600, gar:5, notas:'Alta eficiencia. Solo compatible con batería Luna de Huawei.' },
+    { id:'i10', marca:'Growatt', modelo:'SPH4000TL BL-UP', pot:4000, tipo:'hibrido', vbat:48, fases:1, mppt:2, ef:97.3, vdc:500, gar:10, notas:'Para sistemas pequeños residenciales con batería.' },
+  ],
+  baterias: [
+    { id:'b1', marca:'Tensite / GreenPoint', modelo:'GEL 12V-150Ah', tipo:'gel', v:12, ah:150, ciclos:1200, kg:42, gar:2, dod:0.5, notas:'La más común en Colombia. Precio accesible. Buena para clima cálido.' },
+    { id:'b2', marca:'Tensite / GreenPoint', modelo:'GEL 12V-200Ah', tipo:'gel', v:12, ah:200, ciclos:1200, kg:58, gar:2, dod:0.5, notas:'Capacidad media. Excelente relación costo-capacidad.' },
+    { id:'b3', marca:'Tensite / GreenPoint', modelo:'GEL 12V-250Ah', tipo:'gel', v:12, ah:250, ciclos:1200, kg:72, gar:2, dod:0.5, notas:'Alta capacidad. Para sistemas con varios días de autonomía.' },
+    { id:'b4', marca:'Tensite', modelo:'GEL 12V-300Ah', tipo:'gel', v:12, ah:300, ciclos:1200, kg:84, gar:2, dod:0.5, notas:'Máxima capacidad GEL disponible en Colombia.' },
+    { id:'b5', marca:'CBS / Varta', modelo:'AGM 12V-150Ah', tipo:'agm', v:12, ah:150, ciclos:800, kg:38, gar:2, dod:0.5, notas:'AGM. Descarga más rápida que GEL. Buena para arranque de cargas grandes.' },
+    { id:'b6', marca:'CBS', modelo:'AGM 12V-200Ah', tipo:'agm', v:12, ah:200, ciclos:800, kg:52, gar:2, dod:0.5, notas:'AGM 200Ah. Popular en instalaciones industriales.' },
+    { id:'b7', marca:'CBS', modelo:'AGM 12V-250Ah', tipo:'agm', v:12, ah:250, ciclos:800, kg:64, gar:2, dod:0.5, notas:'AGM alta capacidad.' },
+    { id:'b8', marca:'Felicity Solar', modelo:'LiFePO₄ 48V-100Ah (4.8kWh)', tipo:'litio', v:48, ah:100, ciclos:6000, kg:43, gar:5, dod:0.9, notas:'Litio 4.8kWh. Compatible con Growatt y Deye. Alta vida útil.' },
+    { id:'b9', marca:'Felicity Solar', modelo:'LiFePO₄ 48V-200Ah (9.6kWh)', tipo:'litio', v:48, ah:200, ciclos:6000, kg:82, gar:5, dod:0.9, notas:'Litio 9.6kWh. Excelente para hogares con AC o consumo alto.' },
+    { id:'b10', marca:'Pylontech', modelo:'US5000 48V-74Ah (3.5kWh)', tipo:'litio', v:48, ah:74, ciclos:6000, kg:30, gar:10, dod:0.9, notas:'Rack modular. Se pueden conectar hasta 8 módulos en paralelo. Muy confiable.' },
+    { id:'b11', marca:'Greenpoint', modelo:'LiFePO₄ 25.6V-100Ah (2.56kWh)', tipo:'litio', v:25.6, ah:100, ciclos:4000, kg:22, gar:3, dod:0.9, notas:'Batería de litio económica disponible en Colombia.' },
+    { id:'b12', marca:'Greenpoint', modelo:'LiFePO₄ 51.2V-200Ah (10kWh)', tipo:'litio', v:51.2, ah:200, ciclos:4000, kg:80, gar:3, dod:0.9, notas:'Sistema completo con BMS integrado.' },
+  ],
+  aires: [
+    { id:'a1', marca:'LG', modelo:'S12EQ NSJ', btu:12000, tipo:'inverter', pot:1060, pot_max:1250, pot_arr:1378, seer:16.0, notas:'Inverter. Muy eficiente. Excelente para uso solar.' },
+    { id:'a2', marca:'Samsung', modelo:'AR12BSFGAWK', btu:12000, tipo:'inverter', pot:1130, pot_max:1350, pot_arr:1469, seer:15.8, notas:'Inverter WindFree. Bajo consumo en modo eco.' },
+    { id:'a3', marca:'Electrolux', modelo:'EI12F', btu:12000, tipo:'onoff', pot:1225, pot_max:1225, pot_arr:4287, seer:11.0, notas:'ON/OFF. Pico de arranque alto. Requiere inversor grande.' },
+    { id:'a4', marca:'LG', modelo:'S18EQ NSJ', btu:18000, tipo:'inverter', pot:1560, pot_max:1800, pot_arr:2028, seer:15.5, notas:'1.5 Ton Inverter. Buena opción para oficinas.' },
+    { id:'a5', marca:'Carrier', modelo:'40QHC024V8', btu:24000, tipo:'inverter', pot:2100, pot_max:2400, pot_arr:2730, seer:16.2, notas:'2 Ton Inverter. Para locales comerciales.' },
+  ]
+};
 
-// ── THEME ──
-const saved = localStorage.getItem("theme")||"dark";
-document.documentElement.setAttribute("data-theme",saved);
-const themeBtn = document.getElementById("themeBtn");
-themeBtn.textContent = saved==="dark"?"🌙":"☀️";
-themeBtn.addEventListener("click",()=>{
-  const cur = document.documentElement.getAttribute("data-theme");
-  const next = cur==="dark"?"light":"dark";
-  document.documentElement.setAttribute("data-theme",next);
-  localStorage.setItem("theme",next);
-  themeBtn.textContent = next==="dark"?"🌙":"☀️";
-});
+let DB = JSON.parse(localStorage.getItem(DB_KEY)) || JSON.parse(JSON.stringify(defaultDB));
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }
 
-// ── MOBILE SIDEBAR ──
-document.getElementById("mobileToggle").addEventListener("click",()=>{
-  document.getElementById("sidebar").classList.toggle("open");
-  document.getElementById("sidebarOverlay").classList.toggle("open");
-});
-function closeSidebar(){
-  document.getElementById("sidebar").classList.remove("open");
-  document.getElementById("sidebarOverlay").classList.remove("open");
-}
-
-// ── TOAST ──
-function showToast(msg,type=""){
-  const t=document.getElementById("toast");
-  t.textContent=msg; t.className="toast "+type;
-  t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"),3500);
-}
-
-// ── STEPS ──
-function goStep(n){
-  [1,2,3,4,5].forEach(i=>{
-    document.getElementById("panelStep"+i).style.display = i===n?"block":"none";
-    const s = document.getElementById("step"+i);
-    s.className = "step" + (i===n?" active": i<n?" done":"");
-  });
-  currentStep=n;
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-
-// ── TIPO SISTEMA ──
-function selectSysType(el,type){
-  document.querySelectorAll(".sys-type-btn").forEach(b=>b.classList.remove("selected"));
-  el.classList.add("selected");
-  sysType=type;
-  const showBat = type==="offgrid"||type==="hibrido";
-  document.getElementById("batteryCard").style.display = showBat?"block":"none";
-  if(showBat){
-    document.getElementById("inversorTipo").value = type==="hibrido"?"hibrido":"cargador";
-    document.getElementById("inversorVdc").value = "48";
-  }
-}
-
-// ── SYNC CONSUMO ──
-function syncConsumo(){
-  const m = parseFloat(document.getElementById("consumoMensual").value)||0;
-  document.getElementById("consumoDiario").value = m>0 ? (m/30).toFixed(2) : "";
-}
-function syncConsumoDiario(){
-  const d = parseFloat(document.getElementById("consumoDiario").value)||0;
-  document.getElementById("consumoMensual").value = d>0 ? (d*30).toFixed(0) : "";
-}
-
-// ── ELECTRODOMÉSTICOS ──
-const appliancesList = [
-  {name:"Nevera",w:150,h:24},
-  {name:"Televisor LED",w:80,h:6},
-  {name:"Bombillo LED",w:10,h:6},
-  {name:"Computador",w:100,h:8},
-  {name:"Lavadora",w:500,h:1},
-  {name:"Ventilador",w:60,h:8},
-  {name:"Aire acondicionado",w:1200,h:8},
-  {name:"Microondas",w:800,h:0.5},
-  {name:"Plancha",w:1000,h:0.5},
-  {name:"Bomba agua",w:750,h:2},
+/* ══════════════════════════════════════════════════════
+   STATE DE LA CALCULADORA
+══════════════════════════════════════════════════════ */
+let cargas = [
+  { desc:'Luces LED',          qty:15, pot:15,  hrs:6 },
+  { desc:'Televisores',        qty:4,  pot:80,  hrs:4 },
+  { desc:'Cargador celulares', qty:3,  pot:45,  hrs:1 },
+  { desc:'Nevera 220L',        qty:1,  pot:250, hrs:10 },
+  { desc:'Lavadora',           qty:1,  pot:525, hrs:2 },
 ];
-let applianceRows=[];
+let editingPanel = null;
+let editingInv   = null;
+let editingBat   = null;
+let editingAire  = null;
+let aiHistory    = [];
+let calcMode     = 'manual';
 
-function addAppliance(){
-  const id = Date.now();
-  applianceRows.push(id);
-  const div=document.createElement("div");
-  div.id="app"+id;
-  div.style.cssText="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 40px;gap:10px;margin-bottom:10px;align-items:center;";
-  div.innerHTML=`
-    <select onchange="updateApplianceCalc()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:.85rem;outline:none;">
-      <option value="">Personalizado</option>
-      ${appliancesList.map(a=>`<option value="${a.w}|${a.h}">${a.name} (${a.w}W)</option>`).join("")}
-    </select>
-    <input type="number" placeholder="Watts" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:.85rem;outline:none;" oninput="updateApplianceCalc()">
-    <input type="number" placeholder="Horas/día" value="4" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:.85rem;outline:none;" oninput="updateApplianceCalc()">
-    <input type="number" placeholder="Cant." value="1" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:.85rem;outline:none;" oninput="updateApplianceCalc()">
-    <button onclick="removeAppliance(${id})" style="background:rgba(255,77,109,.15);border:1px solid rgba(255,77,109,.3);color:#ff4d6d;border-radius:8px;cursor:pointer;font-size:.9rem;width:36px;height:36px;">✕</button>
-  `;
-  const sel=div.querySelector("select");
-  sel.addEventListener("change",function(){
-    if(this.value){
-      const [w,h]=this.value.split("|");
-      div.querySelectorAll("input")[0].value=w;
-      div.querySelectorAll("input")[1].value=h;
-      updateApplianceCalc();
-    }
-  });
-  document.getElementById("appliances").appendChild(div);
-}
+/* ══════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════ */
+const n  = v => (typeof v === 'number' && isFinite(v)) ? v : 0;
+const f2 = v => n(v).toLocaleString('es-CO',{maximumFractionDigits:2});
+const f0 = v => Math.round(n(v)).toLocaleString('es-CO');
+const f1 = v => n(v).toLocaleString('es-CO',{maximumFractionDigits:1});
+const uid= ()=> 'x'+Math.random().toString(36).slice(2,9);
 
-function removeAppliance(id){
-  document.getElementById("app"+id).remove();
-  applianceRows=applianceRows.filter(r=>r!==id);
-  updateApplianceCalc();
-}
+// Commercial breaker sizes
+const BREAKERS = [6,10,16,20,25,32,40,50,63,80,100,125,160,200];
+const nextBreakerUp   = v => BREAKERS.find(b => b > v) || BREAKERS[BREAKERS.length-1];
+const nextBreakerDown = v => [...BREAKERS].reverse().find(b => b < v) || BREAKERS[0];
 
-function updateApplianceCalc(){
-  let total=0;
-  document.getElementById("appliances").querySelectorAll("div[id]").forEach(row=>{
-    const inputs=row.querySelectorAll("input");
-    const w=parseFloat(inputs[0].value)||0;
-    const h=parseFloat(inputs[1].value)||0;
-    const c=parseFloat(inputs[2].value)||1;
-    total+=w*h*c/1000;
-  });
-  if(total>0){
-    document.getElementById("consumoDiario").value=total.toFixed(2);
-    document.getElementById("consumoMensual").value=(total*30).toFixed(0);
-  }
-}
+// Cable selection table
+const CABLES = [
+  {a:10,  eu:1.5, awg:14},
+  {a:15,  eu:2,   awg:14},
+  {a:20,  eu:2.5, awg:12},
+  {a:30,  eu:4,   awg:10},
+  {a:40,  eu:6,   awg:8 },
+  {a:55,  eu:10,  awg:6 },
+  {a:75,  eu:16,  awg:4 },
+  {a:100, eu:25,  awg:2 },
+  {a:130, eu:35,  awg:1 },
+  {a:170, eu:50,  awg:'2/0'},
+];
+const cableForAmps = a => CABLES.find(c=>c.a>=a) || CABLES[CABLES.length-1];
 
-// ── PANEL SELECT ──
-document.getElementById("panelWp").addEventListener("change",function(){
-  document.getElementById("customWpGroup").style.display=this.value==="custom"?"block":"none";
+/* ══════════════════════════════════════════════════════
+   THEME
+══════════════════════════════════════════════════════ */
+(function(){
+  const t = localStorage.getItem('sc-theme')||'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeBtn').textContent = t==='dark'?'🌙':'☀️';
+})();
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const c = document.documentElement.getAttribute('data-theme');
+  const n = c==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  document.getElementById('themeBtn').textContent = n==='dark'?'🌙':'☀️';
+  localStorage.setItem('sc-theme',n);
 });
-function updatePanelCalc(){}
-function updateInversor(){
-  const t=document.getElementById("inversorTipo").value;
-  document.getElementById("batteryCard").style.display=(t==="hibrido"||t==="cargador")?"block":"none";
-}
-function calcClamps(){}
 
-// ══════════════════════════════════════════
-// CÁLCULO PRINCIPAL
-// ══════════════════════════════════════════
-function calcularTodo(){
-  // 1. LEER INPUTS
-  const consumoDiario = parseFloat(document.getElementById("consumoDiario").value)||0;
-  if(!consumoDiario){showToast("⚠️ Ingresa el consumo diario en el Paso 1","error");return;}
-
-  const hsp       = parseFloat(document.getElementById("hsp").value)||4.5;
-  const perdidas  = parseFloat(document.getElementById("perdidas").value)||20;
-  const panelWpSel= document.getElementById("panelWp").value;
-  const panelWp   = panelWpSel==="custom"
-    ? (parseFloat(document.getElementById("customWp").value)||400)
-    : parseFloat(panelWpSel);
-
-  const panelVoc  = parseFloat(document.getElementById("panelVoc").value)||45;
-  const panelVmp  = parseFloat(document.getElementById("panelVmp").value)||37.5;
-  const panelIsc  = parseFloat(document.getElementById("panelIsc").value)||11.2;
-  const panelImp  = parseFloat(document.getElementById("panelImp").value)||10.5;
-  const inversorVdc= parseFloat(document.getElementById("inversorVdc").value)||600;
-  const inversorVac= parseFloat(document.getElementById("inversorVac").value)||220;
-  const inversorEfic=(parseFloat(document.getElementById("inversorEfic").value)||97)/100;
-  const inversorTipo=document.getElementById("inversorTipo").value;
-  const distPanelInv=parseFloat(document.getElementById("distPanelInv").value)||10;
-  const distInvTablero=parseFloat(document.getElementById("distInvTablero").value)||5;
-  const caldDC    = parseFloat(document.getElementById("caldTensionDC").value)||1.5;
-  const caldAC    = parseFloat(document.getElementById("caldTensionAC").value)||2;
-  const material  = document.getElementById("materialCable").value;
-  const filas     = parseFloat(document.getElementById("filasPanel").value)||1;
-  const tipoTecho = document.getElementById("tipoTecho").value;
-  const inclinacion= parseFloat(document.getElementById("inclinacion").value)||15;
-  const dimPanel  = document.getElementById("panelDim").value;
-
-  // Baterías
-  let batAuto=24,batV=48,batDod=0.8,batTipo="litio";
-  if(sysType!=="ongrid"){
-    batAuto=parseFloat(document.getElementById("batAutonomia").value)||24;
-    batV   =parseFloat(document.getElementById("batVoltaje").value)||48;
-    batDod =(parseFloat(document.getElementById("batDod").value)||80)/100;
-    batTipo=document.getElementById("batTipo").value;
-  }
-
-  // 2. POTENCIA NECESARIA
-  const factorPerd = 1 + perdidas/100;
-  const energiaRequerida = consumoDiario * factorPerd; // kWh/día con pérdidas
-  const potenciaSistema  = energiaRequerida / hsp;     // kWp necesario
-
-  // 3. NÚMERO DE PANELES
-  const numPaneles = Math.ceil(potenciaSistema * 1000 / panelWp);
-  const potenciaReal = numPaneles * panelWp / 1000; // kWp real instalado
-
-  // 4. CONFIGURACIÓN SERIE/PARALELO
-  let panelesSerie, stringsParalelo;
-  if(inversorTipo==="string"){
-    panelesSerie  = Math.floor(inversorVdc / panelVoc);
-    if(panelesSerie<1) panelesSerie=1;
-    stringsParalelo = Math.ceil(numPaneles / panelesSerie);
-  } else if(inversorTipo==="micro"){
-    panelesSerie  = 1;
-    stringsParalelo = numPaneles;
-  } else {
-    // hibrido / cargador — configurar para voltaje banco
-    panelesSerie  = Math.floor(batV / panelVmp);
-    if(panelesSerie<1) panelesSerie=1;
-    stringsParalelo = Math.ceil(numPaneles / panelesSerie);
-  }
-  const totalPaneles = panelesSerie * stringsParalelo;
-  const numPanelesReal = totalPaneles >= numPaneles ? totalPaneles : numPaneles;
-  const potenciaFinalKwp = numPanelesReal * panelWp / 1000;
-
-  // 5. INVERSOR — potencia recomendada
-  const potInvRecomendada = potenciaFinalKwp * 1000 * 1.2; // +20% margen
-  const potInvMin  = Math.round(potenciaFinalKwp * 1000);
-  const potInvMax  = Math.round(potenciaFinalKwp * 1000 * 1.3);
-
-  // Corriente AC del inversor
-  const corrienteAC = (potInvRecomendada) / inversorVac;
-
-  // 6. CABLEADO DC
-  // Resistividad cobre: 0.0175 Ω·mm²/m | aluminio: 0.028
-  const rho = material==="cobre" ? 0.0175 : 0.028;
-  // Sección cable DC: S = (2 × L × I) / (caída × V)
-  const corrienteDC   = panelImp * stringsParalelo * 1.25; // con factor 1.25 NEC
-  const voltajeDCsistema = panelesSerie * panelVmp;
-  const secCableDC_calc = (2 * distPanelInv * corrienteDC) / ((caldDC/100) * voltajeDCsistema / rho);
-  const secCableDC = normalizarSeccion(secCableDC_calc);
-  const awgDC     = mm2ToAWG(secCableDC);
-
-  // Sección cable AC
-  const secCableAC_calc = (2 * distInvTablero * corrienteAC) / ((caldAC/100) * inversorVac / rho);
-  const secCableAC = normalizarSeccion(secCableAC_calc);
-  const awgAC     = mm2ToAWG(secCableAC);
-
-  // Cable tierra: igual al mayor entre DC y AC pero mínimo 6mm²
-  const secTierra = Math.max(secCableDC, secCableAC, 6);
-
-  // METROS DE CABLE
-  const metrosCablePos  = distPanelInv + 2; // positivo DC
-  const metrosCableNeg  = distPanelInv + 2; // negativo DC
-  const metrosCableAC   = distInvTablero * 3 + 2; // trifásico o monofásico
-  const metrosTierra    = distPanelInv + distInvTablero + 5;
-
-  // 7. PROTECCIONES
-  // Fusible/breaker DC por string: 1.25 × Isc
-  const fusibleDCstringA = Math.ceil(panelIsc * 1.25 / 5) * 5; // redondear a múltiplo de 5
-  // Breaker AC: 1.25 × corriente AC
-  const breakerACa = calcBreaker(corrienteAC * 1.25);
-  // DPS (descargador de sobretensión)
-  const dps = "DPS Clase II 1000V DC";
-  // Seccionador DC
-  const seccionadorDC = `Seccionador DC ${Math.round(voltajeDCsistema * 1.15)}V / ${Math.round(corrienteDC * 1.25)}A`;
-
-  // TABLERO: espacios necesarios
-  // 1 breaker AC principal + 1 por string DC + 1 tierra + 1 reserva
-  const espaciosBreaker = 2 + stringsParalelo + 1;
-  const tipoTablero = espaciosBreaker <= 4 ? "4 espacios" :
-                      espaciosBreaker <= 6 ? "6 espacios" :
-                      espaciosBreaker <= 8 ? "8 espacios" :
-                      espaciosBreaker <= 12 ? "12 espacios" : "18 espacios";
-
-  // 8. ESTRUCTURA
-  // Dim panel
-  const [dLargo, dAncho] = parseDim(dimPanel);
-  const panelesFilaManual = parseFloat(document.getElementById("panelesFilaManual").value)||0;
-  const panelesPorFila = panelesFilaManual > 0 ? panelesFilaManual : Math.ceil(numPanelesReal / filas);
-  const filasReal = Math.ceil(numPanelesReal / panelesPorFila);
-
-  // Rieles: 2 rieles por fila × largo de fila
-  const largoFila = panelesPorFila * dLargo * 1.02; // 2% solapamiento
-  const metrosRiel = filasReal * 2 * largoFila;
-
-  // Midclamps: entre paneles = (panelesPorFila-1)*2 por fila
-  const midclamps = filasReal * (panelesPorFila - 1) * 2;
-  // Endclamps: 2 extremos × 2 rieles × filas
-  const endclamps = filasReal * 2 * 2;
-  // Tornillos: ~4 por riel sección
-  const tornillos = Math.ceil(metrosRiel / 1.5) * 4;
-  // Área total paneles
-  const areaPaneles = numPanelesReal * dLargo * dAncho;
-
-  // 9. BATERÍAS (off-grid/híbrido)
-  let batResult=null;
-  if(sysType!=="ongrid"){
-    const energiaAlmacenada = consumoDiario * batAuto / 24; // kWh necesario
-    const capacidadAh = (energiaAlmacenada * 1000) / (batV * batDod);
-    const batPorString = batV / 12; // baterías de 12V en serie para llegar al voltaje
-    const strings = Math.ceil(capacidadAh / 100); // asumiendo batería de 100Ah
-    const totalBaterias = batPorString * strings;
-    batResult = { energiaAlmacenada, capacidadAh, batPorString, strings, totalBaterias, batV, batTipo };
-  }
-
-  // GUARDAR RESULTADOS GLOBALES
-  lastResults = {
-    consumoDiario, hsp, perdidas, energiaRequerida, potenciaSistema,
-    panelWp, numPanelesReal, potenciaFinalKwp, panelesSerie, stringsParalelo,
-    inversorTipo, potInvRecomendada, potInvMin, potInvMax, corrienteAC, voltajeDCsistema,
-    secCableDC, awgDC, secCableAC, awgAC, secTierra,
-    metrosCablePos, metrosCableNeg, metrosCableAC, metrosTierra,
-    fusibleDCstringA, breakerACa, dps, seccionadorDC, tipoTablero, espaciosBreaker,
-    panelesPorFila, filasReal, metrosRiel, midclamps, endclamps, tornillos, areaPaneles,
-    tipoTecho, inclinacion, batResult, sysType, material, tipoCableDC: document.getElementById("tipoCableDC").value,
-    dLargo, dAncho
-  };
-
-  renderResultados(lastResults);
-  goStep(5);
+/* ══════════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════════ */
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tnav,.slink').forEach(el=>{
+    el.classList.toggle('active', el.getAttribute('onclick')?.includes(id));
+  });
+  if(id==='s-paneles-cat') renderPanelCatalog();
+  if(id==='s-inv-cat')     renderInvCatalog();
+  if(id==='s-bat-cat')     renderBatCatalog();
+  if(id==='s-aire')        renderAireCatalog();
+  if(id==='s-ai')          renderKB();
 }
 
-// ══════════════════════════════════════════
-// RENDER RESULTADOS
-// ══════════════════════════════════════════
-function renderResultados(r){
+/* ══════════════════════════════════════════════════════
+   MODE SWITCH
+══════════════════════════════════════════════════════ */
+function setMode(m){
+  calcMode = m;
+  document.getElementById('mode-manual').style.display = m==='manual'?'':'none';
+  document.getElementById('mode-recibo').style.display = m==='recibo'?'':'none';
+  document.getElementById('tab-manual').classList.toggle('active', m==='manual');
+  document.getElementById('tab-recibo').classList.toggle('active', m==='recibo');
+}
 
-  // CARDS RESUMEN
-  document.getElementById("mainResults").innerHTML=`
-    <div class="result-card">
-      <div class="result-label">Paneles necesarios</div>
-      <div class="result-value">${r.numPanelesReal}<span class="result-unit">uds</span></div>
-      <div class="result-note">${r.panelWp} Wp cada uno · ${r.potenciaFinalKwp.toFixed(2)} kWp total</div>
+/* ══════════════════════════════════════════════════════
+   TABLA DE CARGAS
+══════════════════════════════════════════════════════ */
+function renderCargas(){
+  const tb = document.getElementById('cargas-tbody');
+  tb.innerHTML = cargas.map((c,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td><input type="text" style="width:150px" value="${c.desc.replace(/"/g,'&quot;')}" onchange="cargas[${i}].desc=this.value;calcAll()"></td>
+      <td class="c"><input type="number" class="w60" value="${c.qty}" min="1" onchange="cargas[${i}].qty=+this.value||1;calcAll()"></td>
+      <td class="r"><input type="number" class="w80" value="${c.pot}" min="0" step="1" onchange="cargas[${i}].pot=+this.value||0;calcAll()"></td>
+      <td class="c"><input type="number" class="w60" value="${c.hrs}" min="0" step="0.25" onchange="cargas[${i}].hrs=+this.value||0;calcAll()"></td>
+      <td class="r"><strong>${f0(c.qty*c.pot*c.hrs)}</strong></td>
+      <td class="r">${f0(c.qty*c.pot)}</td>
+      <td><button class="del" onclick="confirmDelete('¿Eliminar la carga «${c.desc}»?',()=>{cargas.splice(${i},1);renderCargas();calcAll()})">✕</button></td>
+    </tr>
+  `).join('');
+  document.getElementById('badge-cargas').textContent = cargas.length + ' cargas';
+  calcAll();
+}
+
+function addCarga(){
+  cargas.push({desc:'Nueva carga', qty:1, pot:100, hrs:4});
+  renderCargas();
+}
+function resetCalc(){
+  if(!confirm('¿Limpiar todas las cargas y volver a los valores de ejemplo?')) return;
+  cargas=[
+    {desc:'Luces LED',qty:15,pot:15,hrs:6},
+    {desc:'Televisores',qty:4,pot:80,hrs:4},
+    {desc:'Cargador celulares',qty:3,pot:45,hrs:1},
+    {desc:'Nevera 220L',qty:1,pot:250,hrs:10},
+    {desc:'Lavadora',qty:1,pot:525,hrs:2},
+  ];
+  renderCargas();
+}
+
+/* ══════════════════════════════════════════════════════
+   CÁLCULO PRINCIPAL
+══════════════════════════════════════════════════════ */
+function calcAll(){
+  const fs   = +document.getElementById('p-fs').value||1.25;
+  const hsp  = +document.getElementById('p-hsp').value||4.5;
+  document.getElementById('lbl-fs').textContent = fs;
+
+  // TOTALES DE CARGA
+  let totCons = 0, totPot = 0;
+  cargas.forEach(c => { totCons += c.qty*c.pot*c.hrs; totPot += c.qty*c.pot; });
+  const consFSWh  = totCons * fs;
+  const potFSW    = totPot  * fs;
+
+  document.getElementById('t-consumo').textContent    = f0(totCons) + ' Wh/día';
+  document.getElementById('t-potins').textContent     = f0(totPot)  + ' W';
+  document.getElementById('t-consumo-fs').textContent = f0(consFSWh)+ ' Wh/día';
+  document.getElementById('t-potins-fs').textContent  = f0(potFSW)  + ' W';
+
+  // STATS CONSUMO
+  document.getElementById('consumo-stats').innerHTML = `
+    <div class="stat green">
+      <div class="stat-label">Consumo diario</div>
+      <div class="stat-val">${f0(totCons)}</div>
+      <div class="stat-unit">Wh/día</div>
+      <div class="stat-formula">Σ (Cant × W × h)</div>
     </div>
-    <div class="result-card">
-      <div class="result-label">Potencia del sistema</div>
-      <div class="result-value">${r.potenciaFinalKwp.toFixed(2)}<span class="result-unit">kWp</span></div>
-      <div class="result-note">Consumo cubierto: ${(r.potenciaFinalKwp*r.hsp/(1+r.perdidas/100)).toFixed(1)} kWh/día</div>
+    <div class="stat">
+      <div class="stat-label">Consumo + F.S. ×${fs}</div>
+      <div class="stat-val">${f0(consFSWh)}</div>
+      <div class="stat-unit">Wh/día diseño</div>
+      <div class="stat-formula">${f0(totCons)} × ${fs}</div>
     </div>
-    <div class="result-card">
-      <div class="result-label">Inversor recomendado</div>
-      <div class="result-value">${(r.potInvRecomendada/1000).toFixed(1)}<span class="result-unit">kW</span></div>
-      <div class="result-note">Rango: ${(r.potInvMin/1000).toFixed(1)}–${(r.potInvMax/1000).toFixed(1)} kW</div>
+    <div class="stat amber">
+      <div class="stat-label">Consumo mensual</div>
+      <div class="stat-val">${f1(totCons*30/1000)}</div>
+      <div class="stat-unit">kWh/mes</div>
+      <div class="stat-formula">${f0(totCons)} × 30 ÷ 1000</div>
     </div>
-    <div class="result-card">
-      <div class="result-label">Cable DC (sección)</div>
-      <div class="result-value">${r.secCableDC}<span class="result-unit">mm²</span></div>
-      <div class="result-note">${r.awgDC} AWG · Cable Solar PV doble aislamiento</div>
-    </div>
-    <div class="result-card">
-      <div class="result-label">Metros totales cable</div>
-      <div class="result-value">${(r.metrosCablePos+r.metrosCableNeg+r.metrosCableAC+r.metrosTierra).toFixed(0)}<span class="result-unit">m</span></div>
-      <div class="result-note">DC + AC + tierra</div>
-    </div>
-    <div class="result-card">
-      <div class="result-label">Tablero eléctrico</div>
-      <div class="result-value" style="font-size:1.2rem;">${r.tipoTablero}</div>
-      <div class="result-note">${r.espaciosBreaker} posiciones requeridas</div>
+    <div class="stat blue">
+      <div class="stat-label">Pot. instalada + F.S.</div>
+      <div class="stat-val">${f0(potFSW)}</div>
+      <div class="stat-unit">W → mínimo inversor</div>
+      <div class="stat-formula">${f0(totPot)} × ${fs}</div>
     </div>
   `;
 
   // PANELES
-  document.getElementById("panelesResult").innerHTML=`
-    <div class="alert success">✅ Configuración: <strong>${r.panelesSerie} paneles en serie × ${r.stringsParalelo} string(s) en paralelo</strong> = ${r.numPanelesReal} paneles totales</div>
-    <table class="detail-table">
-      <tr><th>Parámetro</th><th>Valor</th></tr>
-      <tr><td>Cantidad de paneles</td><td class="td-green">${r.numPanelesReal} uds</td></tr>
-      <tr><td>Potencia por panel</td><td>${r.panelWp} Wp</td></tr>
-      <tr><td>Potencia total instalada</td><td>${r.potenciaFinalKwp.toFixed(2)} kWp</td></tr>
-      <tr><td>Paneles en serie (por string)</td><td>${r.panelesSerie}</td></tr>
-      <tr><td>Strings en paralelo</td><td>${r.stringsParalelo}</td></tr>
-      <tr><td>Voltaje sistema DC</td><td>${r.voltajeDCsistema.toFixed(0)} V</td></tr>
-      <tr><td>Generación estimada diaria</td><td>${(r.potenciaFinalKwp * r.hsp).toFixed(1)} kWh/día</td></tr>
-      <tr><td>Generación estimada mensual</td><td>${(r.potenciaFinalKwp * r.hsp * 30).toFixed(0)} kWh/mes</td></tr>
-      <tr><td>Área total de paneles</td><td>${r.areaPaneles.toFixed(1)} m²</td></tr>
-      <tr><td>Disposición</td><td>${r.panelesPorFila} × ${r.filasReal} filas</td></tr>
-    </table>
+  const panWp   = +document.getElementById('pan-wp').value  ||480;
+  const panIsc  = +document.getElementById('pan-isc').value ||14;
+  const panVoc  = +document.getElementById('pan-voc').value ||49.9;
+  const panVmpp = +document.getElementById('pan-vmpp').value||41.2;
+  const panPar  = +document.getElementById('pan-par').value ||1;
+  const panSer  = +document.getElementById('pan-ser').value ||1;
+
+  const ppico   = hsp > 0 ? consFSWh / hsp : 0;
+  const nPanel  = panWp > 0 ? ppico / panWp : 0;
+  const nPanelR = Math.ceil(nPanel);
+  const iscPar  = panIsc * panPar;
+  const vocSer  = panVoc * panSer;
+  const iscFS   = iscPar * fs;
+  const vocFS   = vocSer * fs;
+  const strVolt = panVmpp * panSer;
+
+  document.getElementById('badge-panel').textContent = nPanelR + ' paneles de ' + panWp + 'Wp';
+  document.getElementById('panel-results').innerHTML = `
+    <div class="g2" style="gap:8px">
+      <div class="stat green"><div class="stat-label">Potencia pico</div><div class="stat-val">${f0(ppico)}</div><div class="stat-unit">Wp requeridos</div><div class="stat-formula">${f0(consFSWh)} Wh ÷ ${hsp} HSP</div></div>
+      <div class="stat blue"><div class="stat-label">N° paneles</div><div class="stat-val">${nPanelR}</div><div class="stat-unit">unidades</div><div class="stat-formula">${f2(nPanel)} → ↑${nPanelR}</div></div>
+      <div class="stat"><div class="stat-label">ISC paralelo</div><div class="stat-val">${f2(iscPar)}</div><div class="stat-unit">A (${panPar} string×${f2(panIsc)}A)</div></div>
+      <div class="stat"><div class="stat-label">VOC en serie</div><div class="stat-val">${f2(vocSer)}</div><div class="stat-unit">V (${panSer} pan×${panVoc}V)</div></div>
+      <div class="stat amber"><div class="stat-label">ISC×F.S. → Breaker DC</div><div class="stat-val">${f2(iscFS)}</div><div class="stat-unit">A → Breaker ${nextBreakerUp(iscFS)}A</div></div>
+      <div class="stat amber"><div class="stat-label">VOC×F.S. → DPS DC</div><div class="stat-val">${f2(vocFS)}</div><div class="stat-unit">V → DPS ≥${f0(vocFS)}V</div></div>
+    </div>
   `;
+  document.getElementById('panel-formula').innerHTML = `
+    <div class="f-step">1. Consumo con F.S.:</div>  ${f0(totCons)} Wh × ${fs} = <span class="f-res">${f0(consFSWh)} Wh/día</span>
+\n<div class="f-step">2. Potencia pico de paneles:</div>  ${f0(consFSWh)} Wh ÷ ${hsp} HSP = <span class="f-res">${f2(ppico)} Wp</span>
+\n<div class="f-step">3. N° paneles:</div>  ${f2(ppico)} Wp ÷ ${panWp} Wp/panel = ${f2(nPanel)} → <span class="f-res">↑${nPanelR} paneles</span>
+\n<div class="f-step">4. String:</div>  ${panPar} paralelo × ${panSer} serie | VString = ${panVmpp}×${panSer} = <span class="f-res">${f2(strVolt)} V VMPP</span>
+\n<div class="f-step">5. Protección DC:</div>  ISC=${f2(panIsc)}×${panPar}par×${fs}FS = ${f2(iscFS)}A → <span class="f-res">Breaker DC: ${nextBreakerUp(iscFS)} A</span>
+\n  VOC=${panVoc}×${panSer}ser×${fs}FS = ${f2(vocFS)}V → <span class="f-res">DPS DC ≥ ${f0(vocFS)} V</span>`;
 
   // INVERSOR
-  const invNombre = {string:"String (central)",micro:"Microinversor",hibrido:"Inversor híbrido",cargador:"Inversor/cargador"}[r.inversorTipo];
-  document.getElementById("inversorResult").innerHTML=`
-    <div class="alert info">💡 Tipo de inversor recomendado: <strong>${invNombre}</strong></div>
-    <table class="detail-table">
-      <tr><th>Parámetro</th><th>Valor</th></tr>
-      <tr><td>Potencia nominal recomendada</td><td class="td-green">${(r.potInvRecomendada/1000).toFixed(2)} kW</td></tr>
-      <tr><td>Rango aceptable</td><td>${(r.potInvMin/1000).toFixed(1)} – ${(r.potInvMax/1000).toFixed(1)} kW</td></tr>
-      <tr><td>Voltaje DC entrada (máx)</td><td>${r.voltajeDCsistema.toFixed(0)} V DC</td></tr>
-      <tr><td>Corriente DC entrada</td><td>${(r.panelImp*r.stringsParalelo||0).toFixed(1)} A (${r.stringsParalelo} MPPTs)</td></tr>
-      <tr><td>Voltaje AC salida</td><td>220 V / 60 Hz</td></tr>
-      <tr><td>Corriente AC salida</td><td>${r.corrienteAC.toFixed(1)} A</td></tr>
-      <tr><td>Marcas recomendadas</td><td>Growatt, Fronius, SMA, Deye, Solis, Huawei</td></tr>
-    </table>
+  const invPot  = +document.getElementById('inv-pot').value||5000;
+  const vbat    = +document.getElementById('inv-vbat').value||48;
+  const invTipo = document.getElementById('inv-tipo').value;
+  const batProt = potFSW / vbat;
+  const acProt  = potFSW / 120;
+
+  const invSizes = [1500,2000,3000,4000,5000,6000,8000,10000,12000,15000,20000];
+  const invSug   = invSizes.find(s=>s>=potFSW)||invSizes[invSizes.length-1];
+  const invOk    = invPot >= potFSW;
+
+  document.getElementById('badge-inv').textContent = invOk ? `✓ ${f0(invPot)}W OK` : `⚠️ Necesita ≥${f0(potFSW)}W`;
+  document.getElementById('inv-results').innerHTML = `
+    <div class="g2" style="gap:8px">
+      <div class="stat ${invOk?'green':''}"><div class="stat-label">Pot. instalada + F.S.</div><div class="stat-val">${f0(potFSW)}</div><div class="stat-unit">W mínimo inversor</div></div>
+      <div class="stat blue"><div class="stat-label">Inversor sugerido</div><div class="stat-val">${f0(invSug)}</div><div class="stat-unit">W comercial mínimo</div></div>
+    </div>
+    ${!invOk?`<div class="alert alert-warn" style="margin-top:8px"><span class="alert-icon">⚠️</span>El inversor seleccionado (${f0(invPot)}W) es menor que la potencia requerida (${f0(potFSW)}W). Selecciona uno mayor.</div>`:''}
   `;
+  document.getElementById('inv-formula').innerHTML = `
+    <div class="f-step">Potencia instalada:</div>  ${f0(totPot)} W × ${fs} F.S. = <span class="f-res">${f0(potFSW)} W</span>
+\n<div class="f-step">Inversor comercial mínimo:</div>  Siguiente potencia comercial ≥ ${f0(potFSW)}W = <span class="f-res">${f0(invSug)} W</span>
+\n<div class="f-step">Protección baterías (DC):</div>  ${f0(potFSW)} W ÷ ${vbat} V = ${f2(batProt)} A → Breaker <span class="f-res">${nextBreakerDown(batProt)} A ↓ (por debajo)</span>
+\n<div class="f-step">Protección inversor (AC):</div>  ${f0(potFSW)} W ÷ 120 V = ${f2(acProt)} A → Breaker <span class="f-res">${nextBreakerDown(acProt)} A ↓ (por debajo)</span>`;
 
   // BATERÍAS
-  if(r.batResult){
-    document.getElementById("bateriasCard").style.display="block";
-    const b=r.batResult;
-    const batNombre={agm:"AGM (ciclo profundo)",gel:"Gel",litio:"LiFePO4 (Litio Hierro Fosfato)",ion:"Li-Ion"}[b.batTipo];
-    document.getElementById("bateriasResult").innerHTML=`
-      <table class="detail-table">
-        <tr><th>Parámetro</th><th>Valor</th></tr>
-        <tr><td>Energía a almacenar</td><td class="td-green">${b.energiaAlmacenada.toFixed(1)} kWh</td></tr>
-        <tr><td>Capacidad banco</td><td>${b.capacidadAh.toFixed(0)} Ah @ ${b.batV}V</td></tr>
-        <tr><td>Baterías en serie</td><td>${b.batPorString} uds (para llegar a ${b.batV}V)</td></tr>
-        <tr><td>Strings en paralelo</td><td>${b.strings}</td></tr>
-        <tr><td>Total baterías</td><td class="td-green">${b.totalBaterias} uds</td></tr>
-        <tr><td>Tipo de batería</td><td>${batNombre}</td></tr>
-        <tr><td>Marcas recomendadas</td><td>Pylontech, BYD, CATL, Trojan, Vision</td></tr>
-      </table>
-    `;
+  const batTipo  = document.getElementById('bat-tipo').value;
+  const batDias  = +document.getElementById('bat-dias').value||1;
+  const batDOD   = batTipo==='litio'?0.9:0.5;
+  const batV     = vbat;
+  const consBat  = totCons * batDias;
+  const ahNec    = consBat / batV;
+  const ahReal   = ahNec / batDOD;
+  const batAhs   = [100,150,200,250,300,400];
+  const batRows  = batAhs.map(ah=>{
+    const nb = Math.ceil(ahReal/ah);
+    const vc = (batV/12); // baterías 12V en serie para llegar a tensión
+    const nbTotal = nb * vc;
+    return `<tr><td>${ah} Ah</td><td class="c">${vc}</td><td class="r"><strong>${nb}</strong></td><td class="r">${nbTotal}</td><td class="r">${f0(ah*vc*nb*12)} Wh</td></tr>`;
+  }).join('');
+
+  document.getElementById('bat-results').innerHTML = `
+    <div class="g4" style="margin-bottom:12px">
+      <div class="stat"><div class="stat-label">Consumo a cubrir</div><div class="stat-val">${f0(consBat)}</div><div class="stat-unit">Wh (${batDias} día/s)</div></div>
+      <div class="stat"><div class="stat-label">Tensión sistema</div><div class="stat-val">${batV}</div><div class="stat-unit">V — DOD ${batDOD*100}%</div></div>
+      <div class="stat green"><div class="stat-label">Ah necesarios</div><div class="stat-val">${f1(ahNec)}</div><div class="stat-unit">Ah base</div></div>
+      <div class="stat amber"><div class="stat-label">Ah corregidos / DOD</div><div class="stat-val">${f1(ahReal)}</div><div class="stat-unit">Ah reales a instalar</div></div>
+    </div>
+    <div class="card-title" style="margin-bottom:8px"><span>📊</span> N° baterías según capacidad (${batTipo.toUpperCase()} ${batV}V)</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Capacidad</th><th class="c">En serie (${batV}V)</th><th class="r">Strings paralelo</th><th class="r">Total baterías</th><th class="r">Energía banco</th></tr></thead>
+      <tbody>${batRows}</tbody>
+    </table></div>
+  `;
+  document.getElementById('bat-formula').innerHTML = `
+    <div class="f-step">1. Consumo a almacenar:</div>  ${f0(totCons)} Wh × ${batDias} días = <span class="f-res">${f0(consBat)} Wh</span>
+\n<div class="f-step">2. Ah base:</div>  ${f0(consBat)} Wh ÷ ${batV} V = <span class="f-res">${f1(ahNec)} Ah</span>
+\n<div class="f-step">3. Corrección DOD (${batTipo}):</div>  ${f1(ahNec)} Ah ÷ ${batDOD} DOD = <span class="f-res">${f1(ahReal)} Ah reales</span>
+\n<div class="f-step">4. Baterías en serie:</div>  ${batV}V sistema ÷ 12V batería = <span class="f-res">${batV/12} en serie por string</span>
+\n<div class="f-step">5. Strings en paralelo:</div>  Ah reales ÷ capacidad batería = N° strings → Multiplicar por baterías en serie`;
+
+  // PROTECCIONES Y CABLES
+  const breakerDC  = nextBreakerUp(iscFS);
+  const dpsDC      = Math.max(600, Math.ceil(vocFS/100)*100);
+  const breakerBat = nextBreakerDown(batProt);
+  const breakerAC  = nextBreakerDown(acProt);
+
+  const cDC  = cableForAmps(iscFS);
+  const cBat = cableForAmps(batProt);
+  const cAC  = cableForAmps(acProt);
+
+  document.getElementById('prot-results').innerHTML = `
+    <div class="g4" style="margin-bottom:16px">
+      <div class="stat amber">
+        <div class="stat-label">Breaker DC (Paneles)</div>
+        <div class="stat-val">${breakerDC} A</div>
+        <div class="stat-unit">→ Encima de ${f2(iscFS)} A</div>
+        <div class="stat-formula">ISC×par×F.S. → ↑ comercial</div>
+      </div>
+      <div class="stat amber">
+        <div class="stat-label">DPS DC (Sobretensión)</div>
+        <div class="stat-val">${dpsDC} V</div>
+        <div class="stat-unit">→ Encima de ${f2(vocFS)} V</div>
+        <div class="stat-formula">VOC×ser×F.S. → ↑ redondeo</div>
+      </div>
+      <div class="stat blue">
+        <div class="stat-label">Breaker Baterías (DC)</div>
+        <div class="stat-val">${breakerBat} A</div>
+        <div class="stat-unit">→ Debajo de ${f2(batProt)} A</div>
+        <div class="stat-formula">Pot+F.S. ÷ Vbat → ↓ comercial</div>
+      </div>
+      <div class="stat blue">
+        <div class="stat-label">Breaker Inversor (AC)</div>
+        <div class="stat-val">${breakerAC} A</div>
+        <div class="stat-unit">→ Debajo de ${f2(acProt)} A</div>
+        <div class="stat-formula">Pot+F.S. ÷ 120V → ↓ comercial</div>
+      </div>
+    </div>
+    <div class="card-title"><span>🔌</span> Cables recomendados</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Circuito</th><th>Corriente de diseño</th><th>Sección Europeo</th><th>Calibre AWG</th><th>Notas</th></tr></thead>
+      <tbody>
+        <tr><td>DC Paneles → Inversor</td><td>${f2(iscFS)} A</td><td><strong>${cDC.eu} mm²</strong></td><td><strong>AWG ${cDC.awg}</strong></td><td>Cable solar (UV, temperatura)</td></tr>
+        <tr><td>DC Baterías → Inversor</td><td>${f2(batProt)} A</td><td><strong>${cBat.eu} mm²</strong></td><td><strong>AWG ${cBat.awg}</strong></td><td>Cable flexible, corto recorrido</td></tr>
+        <tr><td>AC Inversor → Cargas</td><td>${f2(acProt)} A</td><td><strong>${cAC.eu} mm²</strong></td><td><strong>AWG ${cAC.awg}</strong></td><td>Cable THHN o libre de halógenos</td></tr>
+        <tr><td>Tierra de protección</td><td>—</td><td><strong>2.5–6 mm²</strong></td><td><strong>AWG 12–10</strong></td><td>Verde-amarillo, mínimo 2.5 mm²</td></tr>
+      </tbody>
+    </table></div>
+    <div class="card-title" style="margin-top:16px"><span>📋</span> Tabla de capacidades de cable de referencia</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Cap. máx (A)</th><th>Europeo (mm²)</th><th>AWG</th><th>Aplicación típica</th></tr></thead>
+      <tbody>
+        <tr><td>10</td><td>1.5</td><td>14</td><td>Iluminación, cargas pequeñas</td></tr>
+        <tr><td>15</td><td>2</td><td>14</td><td>Circuitos de 15A</td></tr>
+        <tr class="${iscFS<=20?'tr-result':''}"><td>20</td><td>2.5</td><td>12</td><td>Iluminación viviendas, tomas generales</td></tr>
+        <tr><td>30</td><td>4</td><td>10</td><td>Tomas especiales, mediana potencia</td></tr>
+        <tr><td>40</td><td>6</td><td>8</td><td>Acometidas, equipos alto consumo</td></tr>
+        <tr><td>55</td><td>10</td><td>6</td><td>Subpaneles, aire acondicionado</td></tr>
+        <tr><td>75</td><td>16</td><td>4</td><td>Motores medianos, sistemas FV</td></tr>
+        <tr><td>100</td><td>25</td><td>2</td><td>Alta demanda: FV, motores, inversores grandes</td></tr>
+        <tr><td>130</td><td>35</td><td>1</td><td>Inversores muy grandes, acometidas</td></tr>
+      </tbody>
+    </table></div>
+  `;
+
+  // RESUMEN FINAL
+  document.getElementById('resumen-final').style.display = 'block';
+  document.getElementById('resumen-content').innerHTML = `
+    <div class="g2">
+      <div>
+        <div class="breakdown">
+          <div class="breakdown-row"><span>☀️ Paneles requeridos</span><span>${nPanelR} × ${panWp}Wp</span></div>
+          <div class="breakdown-row"><span>⚡ Inversor mínimo</span><span>${f0(invSug)} W</span></div>
+          <div class="breakdown-row"><span>🔋 Baterías (200Ah GEL)</span><span>${Math.ceil(ahReal/200) * (vbat/12)} und</span></div>
+          <div class="breakdown-row"><span>🔌 Breaker DC</span><span>${breakerDC} A</span></div>
+          <div class="breakdown-row"><span>⚡ DPS DC</span><span>${dpsDC} V</span></div>
+          <div class="breakdown-row"><span>🔌 Breaker Baterías</span><span>${breakerBat} A</span></div>
+          <div class="breakdown-row"><span>🔌 Breaker AC</span><span>${breakerAC} A</span></div>
+          <div class="breakdown-row"><span>✅ CONSUMO DISEÑO</span><span>${f0(consFSWh)} Wh/día</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="alert alert-ok">
+          <span class="alert-icon">✅</span>
+          <div>
+            <strong>Dimensionamiento completado</strong><br>
+            Proyecto: ${document.getElementById('p-nombre').value||'Sin nombre'}<br>
+            ${document.getElementById('p-ciudad').value?'Ciudad: '+document.getElementById('p-ciudad').value+'<br>':''} 
+            HSP: ${hsp} h/día | F.S.: ${fs}<br>
+            ${f0(cargas.length)} cargas | ${f0(totCons)} Wh/día sin F.S.
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  updateSidebar();
+}
+
+/* ══════════════════════════════════════════════════════
+   MODO RECIBO
+══════════════════════════════════════════════════════ */
+function calcDesdeRecibo(){
+  const kwh = +document.getElementById('r-kwh').value||0;
+  const hsp = +document.getElementById('r-hsp').value||4.5;
+  const fs  = +document.getElementById('r-fs').value||1.25;
+  if(!kwh) return;
+
+  const whdDia  = (kwh*1000/30);
+  const whdFS   = whdDia * fs;
+  const ppico   = whdFS / hsp;
+  const inv480  = Math.ceil(ppico/480);
+  const inv620  = Math.ceil(ppico/620);
+  const invSizes= [1500,2000,3000,4000,5000,6000,8000,10000];
+  const potIns  = whdDia * fs / 24 * 1000; // estimado
+  const invSug  = invSizes.find(s=>s>=whdFS/8)||invSizes[invSizes.length-1];
+
+  document.getElementById('r-formula').innerHTML = `
+    <div class="f-step">1. Consumo diario:</div>  ${kwh} kWh/mes ÷ 30 días = <span class="f-res">${f1(whdDia/1000)} kWh/día = ${f0(whdDia)} Wh/día</span>
+\n<div class="f-step">2. Con factor de seguridad:</div>  ${f0(whdDia)} × ${fs} = <span class="f-res">${f0(whdFS)} Wh/día</span>
+\n<div class="f-step">3. Potencia pico paneles:</div>  ${f0(whdFS)} ÷ ${hsp} HSP = <span class="f-res">${f0(ppico)} Wp</span>
+\n<div class="f-step">4. Con paneles 480Wp:</div>  ${f0(ppico)} ÷ 480 = <span class="f-res">↑${inv480} paneles</span>
+\n<div class="f-step">5. Con paneles 620Wp:</div>  ${f0(ppico)} ÷ 620 = <span class="f-res">↑${inv620} paneles</span>`;
+
+  document.getElementById('r-results').innerHTML = `
+    <div class="g2" style="gap:10px">
+      <div class="stat green"><div class="stat-label">Consumo diario</div><div class="stat-val">${f1(whdDia/1000)}</div><div class="stat-unit">kWh/día (${f0(whdDia)} Wh)</div></div>
+      <div class="stat"><div class="stat-label">Con F.S. ×${fs}</div><div class="stat-val">${f0(whdFS)}</div><div class="stat-unit">Wh/día de diseño</div></div>
+      <div class="stat blue"><div class="stat-label">Paneles 480Wp</div><div class="stat-val">${inv480}</div><div class="stat-unit">unidades</div></div>
+      <div class="stat blue"><div class="stat-label">Paneles 620Wp</div><div class="stat-val">${inv620}</div><div class="stat-unit">unidades</div></div>
+      <div class="stat amber"><div class="stat-label">Inversor sugerido</div><div class="stat-val">${f0(invSug)}</div><div class="stat-unit">W comercial</div></div>
+      <div class="stat purple"><div class="stat-label">Potencia pico</div><div class="stat-val">${f0(ppico)}</div><div class="stat-unit">Wp necesarios</div></div>
+    </div>
+    <div class="alert alert-warn" style="margin-top:10px">
+      <span class="alert-icon">⚠️</span>
+      <div>Este es un dimensionamiento rápido desde el recibo. Para protecciones y cables exactos, usa el <strong>Modo Análisis de Cargas</strong> ingresando cada equipo individualmente.</div>
+    </div>
+  `;
+}
+
+/* ══════════════════════════════════════════════════════
+   SELECTS DE CATÁLOGOS
+══════════════════════════════════════════════════════ */
+function populateSelects(){
+  const ps = document.getElementById('panel-sel');
+  const is = document.getElementById('inv-sel');
+  const bs = document.getElementById('bat-sel');
+  ps.innerHTML = '<option value="">— Seleccionar del catálogo —</option>' +
+    DB.paneles.map(p=>`<option value="${p.id}">${p.marca} ${p.modelo} — ${p.wp}Wp</option>`).join('');
+  is.innerHTML = '<option value="">— Seleccionar del catálogo —</option>' +
+    DB.inversores.map(i=>`<option value="${i.id}">${i.marca} ${i.modelo} — ${i.pot}W ${i.tipo}</option>`).join('');
+  bs.innerHTML = '<option value="">— Seleccionar del catálogo —</option>' +
+    DB.baterias.map(b=>`<option value="${b.id}">${b.marca} ${b.modelo} — ${b.ah}Ah ${b.tipo}</option>`).join('');
+}
+
+function onPanelChange(){
+  const id = document.getElementById('panel-sel').value;
+  const p  = DB.paneles.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('pan-wp').value   = p.wp;
+  document.getElementById('pan-isc').value  = p.isc;
+  document.getElementById('pan-voc').value  = p.voc;
+  document.getElementById('pan-vmpp').value = p.vmpp;
+  document.getElementById('badge-panel').textContent = p.marca + ' ' + p.modelo;
+  calcAll();
+}
+function onInvChange(){
+  const id = document.getElementById('inv-sel').value;
+  const i  = DB.inversores.find(x=>x.id===id);
+  if(!i) return;
+  document.getElementById('inv-pot').value  = i.pot;
+  document.getElementById('inv-tipo').value = i.tipo;
+  if(i.vbat!=='none') document.getElementById('inv-vbat').value = i.vbat;
+  document.getElementById('badge-inv').textContent = i.marca + ' ' + i.modelo;
+  calcAll();
+}
+function onBatChange(){
+  const id = document.getElementById('bat-sel').value;
+  const b  = DB.baterias.find(x=>x.id===id);
+  if(!b) return;
+  const tipMap = {gel:'gel',agm:'agm',litio:'litio',plomo:'gel'};
+  document.getElementById('bat-tipo').value = tipMap[b.tipo]||'gel';
+  calcAll();
+}
+
+/* ══════════════════════════════════════════════════════
+   CATÁLOGO — PANELES
+══════════════════════════════════════════════════════ */
+function renderPanelCatalog(){
+  const g = document.getElementById('panel-catalog-grid');
+  g.innerHTML = DB.paneles.map(p=>`
+    <div class="equip-card">
+      <div class="equip-header">
+        <div>
+          <div class="equip-name">${p.marca} ${p.modelo}</div>
+          <div class="equip-brand">${p.tipo}</div>
+        </div>
+        <div class="badge badge-green">${p.wp} Wp</div>
+      </div>
+      <div class="equip-specs">
+        <span class="equip-spec">ISC: ${p.isc} A</span>
+        <span class="equip-spec">VOC: ${p.voc} V</span>
+        <span class="equip-spec">VMPP: ${p.vmpp} V</span>
+        <span class="equip-spec">Ef: ${p.ef}%</span>
+        <span class="equip-spec">Gar: ${p.gar} años</span>
+      </div>
+      ${p.notas?`<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.4">${p.notas}</div>`:''}
+      <div class="equip-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editPanel('${p.id}')">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDelete('¿Eliminar panel ${p.marca} ${p.modelo}?',()=>deletePanel('${p.id}'))">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+function clearPanelForm(){
+  ['np-marca','np-modelo','np-wp','np-isc','np-voc','np-vmpp','np-impp','np-ef','np-gar','np-notas'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  editingPanel=null;
+  document.getElementById('add-panel-title').textContent='➕ Nuevo Panel FV';
+}
+function editPanel(id){
+  const p = DB.paneles.find(x=>x.id===id);
+  if(!p) return;
+  editingPanel=id;
+  document.getElementById('np-marca').value =p.marca;
+  document.getElementById('np-modelo').value=p.modelo;
+  document.getElementById('np-wp').value    =p.wp;
+  document.getElementById('np-tipo').value  =p.tipo;
+  document.getElementById('np-isc').value   =p.isc;
+  document.getElementById('np-voc').value   =p.voc;
+  document.getElementById('np-vmpp').value  =p.vmpp;
+  document.getElementById('np-impp').value  =p.impp;
+  document.getElementById('np-ef').value    =p.ef;
+  document.getElementById('np-gar').value   =p.gar;
+  document.getElementById('np-notas').value =p.notas||'';
+  document.getElementById('add-panel-title').textContent='✏️ Editar Panel';
+  openModal('modal-add-panel');
+}
+function savePanel(){
+  const obj={
+    id: editingPanel || uid(),
+    marca: document.getElementById('np-marca').value,
+    modelo:document.getElementById('np-modelo').value,
+    wp:    +document.getElementById('np-wp').value,
+    tipo:  document.getElementById('np-tipo').value,
+    isc:   +document.getElementById('np-isc').value,
+    voc:   +document.getElementById('np-voc').value,
+    vmpp:  +document.getElementById('np-vmpp').value,
+    impp:  +document.getElementById('np-impp').value,
+    ef:    +document.getElementById('np-ef').value,
+    gar:   +document.getElementById('np-gar').value,
+    notas: document.getElementById('np-notas').value,
+  };
+  if(!obj.marca||!obj.modelo||!obj.wp){ alert('Completa Marca, Modelo y Potencia'); return; }
+  if(editingPanel){ const i=DB.paneles.findIndex(x=>x.id===editingPanel); DB.paneles[i]=obj; }
+  else DB.paneles.push(obj);
+  saveDB(); populateSelects(); renderPanelCatalog();
+  closeModal('modal-add-panel'); clearPanelForm();
+}
+function deletePanel(id){
+  DB.paneles = DB.paneles.filter(x=>x.id!==id);
+  saveDB(); populateSelects(); renderPanelCatalog();
+}
+
+/* ══════════════════════════════════════════════════════
+   CATÁLOGO — INVERSORES
+══════════════════════════════════════════════════════ */
+function renderInvCatalog(){
+  const g = document.getElementById('inv-catalog-grid');
+  const tipos = {hibrido:'badge-green',ongrid:'badge-blue',offgrid:'badge-amber'};
+  g.innerHTML = DB.inversores.map(i=>`
+    <div class="equip-card">
+      <div class="equip-header">
+        <div>
+          <div class="equip-name">${i.marca} ${i.modelo}</div>
+          <div class="equip-brand">${i.tipo} — ${i.fases==='1'||i.fases===1?'Monofásico':'Trifásico'}</div>
+        </div>
+        <div class="badge ${tipos[i.tipo]||'badge-blue'}">${f0(i.pot)} W</div>
+      </div>
+      <div class="equip-specs">
+        <span class="equip-spec">MPPT: ${i.mppt}</span>
+        <span class="equip-spec">Ef: ${i.ef}%</span>
+        <span class="equip-spec">VDC: ${i.vdc}V</span>
+        ${i.vbat!=='none'?`<span class="equip-spec">Vbat: ${i.vbat}V</span>`:''}
+        <span class="equip-spec">Gar: ${i.gar} años</span>
+      </div>
+      ${i.notas?`<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.4">${i.notas}</div>`:''}
+      <div class="equip-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editInv('${i.id}')">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDelete('¿Eliminar inversor ${i.marca} ${i.modelo}?',()=>deleteInv('${i.id}'))">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+function editInv(id){
+  const i=DB.inversores.find(x=>x.id===id); if(!i) return;
+  editingInv=id;
+  document.getElementById('ni-marca').value =i.marca;
+  document.getElementById('ni-modelo').value=i.modelo;
+  document.getElementById('ni-pot').value   =i.pot;
+  document.getElementById('ni-tipo').value  =i.tipo;
+  document.getElementById('ni-vbat').value  =i.vbat||'none';
+  document.getElementById('ni-fases').value =i.fases||1;
+  document.getElementById('ni-mppt').value  =i.mppt;
+  document.getElementById('ni-ef').value    =i.ef;
+  document.getElementById('ni-vdc').value   =i.vdc;
+  document.getElementById('ni-gar').value   =i.gar;
+  document.getElementById('ni-notas').value =i.notas||'';
+  document.getElementById('add-inv-title').textContent='✏️ Editar Inversor';
+  openModal('modal-add-inv');
+}
+function saveInv(){
+  const obj={
+    id:editingInv||uid(),
+    marca: document.getElementById('ni-marca').value,
+    modelo:document.getElementById('ni-modelo').value,
+    pot:   +document.getElementById('ni-pot').value,
+    tipo:  document.getElementById('ni-tipo').value,
+    vbat:  document.getElementById('ni-vbat').value,
+    fases: +document.getElementById('ni-fases').value,
+    mppt:  +document.getElementById('ni-mppt').value,
+    ef:    +document.getElementById('ni-ef').value,
+    vdc:   +document.getElementById('ni-vdc').value,
+    gar:   +document.getElementById('ni-gar').value,
+    notas: document.getElementById('ni-notas').value,
+  };
+  if(!obj.marca||!obj.modelo||!obj.pot){ alert('Completa Marca, Modelo y Potencia'); return; }
+  if(editingInv){ const i=DB.inversores.findIndex(x=>x.id===editingInv); DB.inversores[i]=obj; }
+  else DB.inversores.push(obj);
+  saveDB(); populateSelects(); renderInvCatalog();
+  closeModal('modal-add-inv'); editingInv=null;
+  document.getElementById('add-inv-title').textContent='➕ Nuevo Inversor';
+}
+function deleteInv(id){ DB.inversores=DB.inversores.filter(x=>x.id!==id); saveDB(); populateSelects(); renderInvCatalog(); }
+
+/* ══════════════════════════════════════════════════════
+   CATÁLOGO — BATERÍAS
+══════════════════════════════════════════════════════ */
+function renderBatCatalog(){
+  const g=document.getElementById('bat-catalog-grid');
+  const badges={gel:'badge-green',agm:'badge-amber',litio:'badge-blue',plomo:'badge-red'};
+  g.innerHTML = DB.baterias.map(b=>`
+    <div class="equip-card">
+      <div class="equip-header">
+        <div>
+          <div class="equip-name">${b.marca}</div>
+          <div class="equip-brand">${b.modelo}</div>
+        </div>
+        <div class="badge ${badges[b.tipo]||'badge-green'}">${b.tipo.toUpperCase()}</div>
+      </div>
+      <div class="equip-specs">
+        <span class="equip-spec">${b.v}V</span>
+        <span class="equip-spec">${b.ah} Ah</span>
+        <span class="equip-spec">${f0(b.v*b.ah)} Wh</span>
+        <span class="equip-spec">DOD ${b.dod*100}%</span>
+        <span class="equip-spec">${b.ciclos} ciclos</span>
+        <span class="equip-spec">${b.kg} kg</span>
+        <span class="equip-spec">Gar: ${b.gar} años</span>
+      </div>
+      ${b.notas?`<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.4">${b.notas}</div>`:''}
+      <div class="equip-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editBat('${b.id}')">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDelete('¿Eliminar batería ${b.marca} ${b.modelo}?',()=>deleteBat('${b.id}'))">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+function editBat(id){
+  const b=DB.baterias.find(x=>x.id===id); if(!b) return;
+  editingBat=id;
+  document.getElementById('nb-marca').value =b.marca;
+  document.getElementById('nb-modelo').value=b.modelo;
+  document.getElementById('nb-tipo').value  =b.tipo;
+  document.getElementById('nb-v').value     =b.v;
+  document.getElementById('nb-ah').value    =b.ah;
+  document.getElementById('nb-ciclos').value=b.ciclos;
+  document.getElementById('nb-kg').value    =b.kg;
+  document.getElementById('nb-gar').value   =b.gar;
+  document.getElementById('nb-notas').value =b.notas||'';
+  document.getElementById('add-bat-title').textContent='✏️ Editar Batería';
+  openModal('modal-add-bat');
+}
+function saveBat(){
+  const tipDOD={gel:0.5,agm:0.5,litio:0.9,plomo:0.3};
+  const t=document.getElementById('nb-tipo').value;
+  const obj={
+    id:editingBat||uid(),
+    marca: document.getElementById('nb-marca').value,
+    modelo:document.getElementById('nb-modelo').value,
+    tipo:t,dod:tipDOD[t]||0.5,
+    v:    +document.getElementById('nb-v').value,
+    ah:   +document.getElementById('nb-ah').value,
+    ciclos:+document.getElementById('nb-ciclos').value,
+    kg:   +document.getElementById('nb-kg').value,
+    gar:  +document.getElementById('nb-gar').value,
+    notas: document.getElementById('nb-notas').value,
+  };
+  if(!obj.marca||!obj.modelo||!obj.ah){ alert('Completa Marca, Modelo y Capacidad'); return; }
+  if(editingBat){ const i=DB.baterias.findIndex(x=>x.id===editingBat); DB.baterias[i]=obj; }
+  else DB.baterias.push(obj);
+  saveDB(); populateSelects(); renderBatCatalog();
+  closeModal('modal-add-bat'); editingBat=null;
+  document.getElementById('add-bat-title').textContent='➕ Nueva Batería';
+}
+function deleteBat(id){ DB.baterias=DB.baterias.filter(x=>x.id!==id); saveDB(); populateSelects(); renderBatCatalog(); }
+
+/* ══════════════════════════════════════════════════════
+   AIRES A/C
+══════════════════════════════════════════════════════ */
+function calcAire(){
+  const btu  = +document.getElementById('aire-btu').value||12000;
+  const tipo = document.getElementById('aire-tipo').value;
+  const hrs  = +document.getElementById('aire-horas').value||8;
+  const fs   = tipo==='inverter'?1.3:3.5;
+  const wNom = btu/3.41;
+  const wArr = wNom*fs;
+  const cons = wNom*hrs;
+
+  document.getElementById('aire-calc-result').innerHTML = `
+    <div class="g4" style="margin-top:12px">
+      <div class="stat"><div class="stat-label">Potencia nominal</div><div class="stat-val">${f0(wNom)}</div><div class="stat-unit">W (${btu/1000}k BTU ÷ 3.41)</div></div>
+      <div class="stat amber"><div class="stat-label">Potencia arranque (×${fs})</div><div class="stat-val">${f0(wArr)}</div><div class="stat-unit">W — inversor debe soportar esto</div></div>
+      <div class="stat green"><div class="stat-label">Consumo diario</div><div class="stat-val">${f0(cons)}</div><div class="stat-unit">Wh/día (${hrs}h uso)</div></div>
+      <div class="stat blue"><div class="stat-label">Consumo mensual</div><div class="stat-val">${f1(cons*30/1000)}</div><div class="stat-unit">kWh/mes</div></div>
+    </div>
+    <div class="formula-box">
+      <div class="f-step">Potencia nominal:</div>  ${btu} BTU ÷ 3.41 = <span class="f-res">${f0(wNom)} W</span>
+\n<div class="f-step">Potencia arranque (${tipo}):</div>  ${f0(wNom)} W × ${fs} = <span class="f-res">${f0(wArr)} W → el inversor debe soportar este pico</span>
+\n<div class="f-step">Consumo diario:</div>  ${f0(wNom)} W × ${hrs} h = <span class="f-res">${f0(cons)} Wh/día</span>
+    </div>
+    <div class="alert alert-warn" style="margin-top:10px">
+      <span class="alert-icon">⚠️</span>
+      <div>El inversor debe tener una capacidad de <strong>arranque</strong> de al menos <strong>${f0(wArr)} W</strong>. La mayoría de inversores soportan 2× su potencia nominal en pico de arranque. Verifica las especificaciones técnicas del inversor.</div>
+    </div>
+  `;
+}
+
+function renderAireCatalog(){
+  const g=document.getElementById('aire-grid');
+  g.innerHTML = DB.aires.map(a=>`
+    <div class="equip-card">
+      <div class="equip-header">
+        <div><div class="equip-name">${a.marca} ${a.modelo}</div><div class="equip-brand">${a.btu/1000}k BTU — ${a.tipo}</div></div>
+        <div class="badge ${a.tipo==='inverter'?'badge-green':'badge-amber'}">${a.tipo}</div>
+      </div>
+      <div class="equip-specs">
+        <span class="equip-spec">Nom: ${a.pot}W</span>
+        <span class="equip-spec">Máx: ${a.pot_max}W</span>
+        <span class="equip-spec">Arranque: ${a.pot_arr}W</span>
+        ${a.seer?`<span class="equip-spec">SEER: ${a.seer}</span>`:''}
+      </div>
+      ${a.notas?`<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.4">${a.notas}</div>`:''}
+      <div class="equip-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editAire('${a.id}')">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDelete('¿Eliminar ${a.marca} ${a.modelo}?',()=>deleteAire('${a.id}'))">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+function editAire(id){
+  const a=DB.aires.find(x=>x.id===id); if(!a) return;
+  editingAire=id;
+  document.getElementById('na-marca').value   =a.marca;
+  document.getElementById('na-modelo').value  =a.modelo;
+  document.getElementById('na-btu').value     =a.btu;
+  document.getElementById('na-tipo').value    =a.tipo;
+  document.getElementById('na-pot').value     =a.pot;
+  document.getElementById('na-pot-max').value =a.pot_max;
+  document.getElementById('na-pot-arr').value =a.pot_arr;
+  document.getElementById('na-seer').value    =a.seer||'';
+  document.getElementById('na-notas').value   =a.notas||'';
+  document.getElementById('add-aire-title').textContent='✏️ Editar equipo AC';
+  openModal('modal-add-aire');
+}
+function saveAire(){
+  const obj={
+    id:editingAire||uid(),
+    marca:   document.getElementById('na-marca').value,
+    modelo:  document.getElementById('na-modelo').value,
+    btu:    +document.getElementById('na-btu').value,
+    tipo:    document.getElementById('na-tipo').value,
+    pot:    +document.getElementById('na-pot').value,
+    pot_max:+document.getElementById('na-pot-max').value,
+    pot_arr:+document.getElementById('na-pot-arr').value,
+    seer:   +document.getElementById('na-seer').value||0,
+    notas:   document.getElementById('na-notas').value,
+  };
+  if(!obj.marca||!obj.btu){ alert('Completa Marca y BTU'); return; }
+  if(editingAire){ const i=DB.aires.findIndex(x=>x.id===editingAire); DB.aires[i]=obj; }
+  else DB.aires.push(obj);
+  saveDB(); renderAireCatalog();
+  closeModal('modal-add-aire'); editingAire=null;
+  document.getElementById('add-aire-title').textContent='➕ Nuevo equipo AC';
+}
+function deleteAire(id){ DB.aires=DB.aires.filter(x=>x.id!==id); saveDB(); renderAireCatalog(); }
+
+/* ══════════════════════════════════════════════════════
+   CONFIRM DELETE
+══════════════════════════════════════════════════════ */
+function confirmDelete(msg, cb){
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-ok').onclick = ()=>{ cb(); closeModal('modal-confirm'); };
+  openModal('modal-confirm');
+}
+
+/* ══════════════════════════════════════════════════════
+   SIDEBAR RESUMEN
+══════════════════════════════════════════════════════ */
+function updateSidebar(){
+  let totC=0; cargas.forEach(c=>totC+=c.qty*c.pot*c.hrs);
+  const fs=+document.getElementById('p-fs').value||1.25;
+  const hsp=+document.getElementById('p-hsp').value||4.5;
+  const wp=+document.getElementById('pan-wp').value||480;
+  const np=wp>0&&hsp>0?Math.ceil(totC*fs/hsp/wp):0;
+  const pot=cargas.reduce((s,c)=>s+c.qty*c.pot,0);
+  const inv=[1500,2000,3000,4000,5000,6000,8000].find(x=>x>=pot*fs)||8000;
+  const nom=document.getElementById('p-nombre').value;
+  document.getElementById('sb-resumen').innerHTML = `
+    ${nom?`<div style="font-weight:700;color:var(--text2);margin-bottom:2px">${nom}</div>`:''}
+    Consumo: ${f0(totC)} Wh/día<br>
+    Paneles: ${np} × ${wp}Wp<br>
+    Inversor: ≥${f0(pot*fs)} W<br>
+    Cargas: ${cargas.length}
+  `;
+}
+
+/* ══════════════════════════════════════════════════════
+   IA — KNOWLEDGE BASE LOCAL
+══════════════════════════════════════════════════════ */
+const KB = [
+  {
+    k:['cable','conductor','calibre','mm','awg','seccion'],
+    r:`**Cables en sistemas FV:**
+
+**DC Paneles → Inversor:** Usa cable solar certificado (doble aislamiento, UV, temperatura). Calibre según corriente ISC × F.S.:
+- Hasta 20A → 2.5 mm² (AWG 12)
+- Hasta 30A → 4 mm² (AWG 10)
+- Hasta 55A → 10 mm² (AWG 6)
+
+**DC Baterías → Inversor:** Cable flexible, lo más corto posible. Mismo calibre que corriente (Pot+F.S./Vbat).
+
+**AC Inversor → Tablero:** Cable THHN o THW. Calibre según breaker AC.
+
+**Tierra:** Mínimo 2.5 mm² verde-amarillo. Conectar paneles, estructura, inversor y baterías.
+
+⚠️ Norma RETIE Colombia exige conductores con aislamiento para 600V en DC.`
+  },
+  {
+    k:['mantenimiento','limpieza','panel','polvo','suciedad'],
+    r:`**Mantenimiento de Paneles Solares:**
+
+**Periodicidad recomendada:**
+- Limpieza visual: cada 15 días
+- Limpieza con agua: cada 1-3 meses (según polvo/clima)
+- Inspección eléctrica: cada 6 meses
+- Revisión termográfica: anual
+
+**¿Cómo limpiar?**
+1. Horario: temprano en la mañana o tarde (paneles fríos)
+2. Agua limpia + paño suave o esponja sin abrasivos
+3. NO usar detergentes agresivos ni agua a presión directa
+4. Revisar que no haya sombras de vegetación nueva
+
+**Inspección eléctrica:**
+- Medir VOC con multímetro en cada string
+- Verificar continuidad de tierra
+- Revisar apriete de conectores MC4
+- Inspeccionar cables (pelado, ratas, UV)
+
+📌 Una reducción del 3-5% en producción puede indicar panel sucio o defectuoso.`
+  },
+  {
+    k:['bateria','gel','agm','litio','lifepo','dod','ciclo','vida'],
+    r:`**Comparativa de Baterías Solares:**
+
+| Tipo | DOD | Ciclos | Temp. | Precio relativo |
+|------|-----|--------|-------|-----------------|
+| GEL | 50% | 1200 | Excelente calor | Bajo |
+| AGM | 50% | 800 | Bueno | Bajo-Medio |
+| Litio LiFePO₄ | 90% | 4000-6000 | Bueno | Alto |
+
+**DOD** (Depth of Discharge): porcentaje máximo de descarga recomendado.
+
+**Para clima cálido (Colombia):** GEL es mejor opción económica. Soporta mejor el calor que AGM.
+
+**Para sistemas de mayor autonomía o larga vida:** Litio LiFePO₄. Aunque más costosa, a 10 años el costo por kWh almacenado es similar o menor.
+
+**Conexión de baterías 12V para 48V:** 4 en SERIE (suma voltajes, misma capacidad).`
+  },
+  {
+    k:['inversor','hibrido','ongrid','offgrid','tipo','diferencia'],
+    r:`**Tipos de Inversores Solares:**
+
+**ON-GRID (Conexión a Red):**
+- Requiere red eléctrica funcionando
+- No funciona en apagones
+- Mayor eficiencia (98%+)
+- Inyecta excedentes a la red
+- Growatt MIN, Huawei SUN2000
+
+**OFF-GRID (Aislado):**
+- Funciona sin red eléctrica
+- Requiere baterías siempre
+- Para zonas rurales sin red
+- Must Solar, Felicity Solar
+
+**HÍBRIDO (Más recomendado hoy):**
+- Conectado a red + con baterías
+- Funciona en apagones (UPS)
+- Máxima flexibilidad
+- Growatt SPH, Deye SUN-xK
+- Ideal para Colombia (cortes frecuentes)
+
+💡 En Colombia con los cortes de energía, el **inversor híbrido** es la mejor opción para uso residencial.`
+  },
+  {
+    k:['proteccion','breaker','dps','fusible','spd','disyuntor'],
+    r:`**Protecciones en Sistemas FV (RETIE Colombia):**
+
+**Lado DC (Paneles):**
+- **Breaker DC:** Seleccionar el valor comercial INMEDIATAMENTE SUPERIOR a ISC×F.S. (Ej: ISC×F.S.=17.5A → Breaker 20A)
+- **DPS (Protección sobretensión):** Valor superior al VOC×F.S. (Ej: VOC×F.S.=150V → DPS 600V DC)
+- **Fusibles por string:** Si hay más de 2 strings en paralelo, fusible en cada string
+
+**Lado DC (Baterías):**
+- **Breaker/Fusible:** Valor INFERIOR a Pot/Vbat (Ej: 5000W/48V=104A → Breaker 80A ↓)
+- Usar breaker para baterías DC, no el mismo que paneles
+
+**Lado AC (Salida):**
+- **Breaker AC:** Valor INFERIOR a Pot/120V (Ej: 5000W/120V=41.6A → Breaker 40A ↓)
+- **SPD AC:** Según norma NTC 2050
+
+**Puesta a tierra:** Obligatoria. Paneles + estructura + inversor + baterías.`
+  },
+  {
+    k:['aire','ac','acondicionado','btu','ton','arranque'],
+    r:`**Aires Acondicionados en Sistemas Solares:**
+
+**Tipo Inverter vs ON/OFF:**
+- **Inverter:** Arranque suave, factor ×1.3. Muy recomendado para solar.
+- **ON/OFF:** Pico de arranque 3-5× la potencia nominal. Requiere inversor grande.
+
+**Cálculo para 12.000 BTU Inverter:**
+- Potencia nominal: 12000÷3.41 = 3.519 W ≈ 1200 W
+- Pico arranque: 1200 × 1.3 = 1560 W
+- Inversor mínimo: 5000W (soporta pico)
+
+**Consumo típico (8h/día):**
+- 9.000 BTU Inverter: ~6 kWh/día
+- 12.000 BTU Inverter: ~8 kWh/día
+- 18.000 BTU Inverter: ~12 kWh/día
+
+💡 Para añadir un AC a un sistema existente, calcula el consumo extra y verifica que el inversor soporta el pico de arranque.`
+  },
+];
+
+function renderKB(){
+  document.getElementById('kb-topics').innerHTML = KB.map((t,i)=>`
+    <div class="breakdown-row" style="cursor:pointer;padding:8px 0;border-bottom:1px solid var(--border)" onclick="aiQuick('${t.k[0]}')">
+      <span style="font-size:12px">📘 ${t.k.slice(0,3).join(' / ')}</span>
+      <span class="badge badge-green" style="font-size:9px">Local</span>
+    </div>
+  `).join('');
+}
+
+function matchKB(q){
+  const ql = q.toLowerCase();
+  for(const entry of KB){
+    if(entry.k.some(k=>ql.includes(k))) return entry.r;
+  }
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════
+   IA — SEND
+══════════════════════════════════════════════════════ */
+function aiQuick(q){
+  document.getElementById('ai-input').value = q;
+  sendAI();
+}
+
+async function sendAI(){
+  const inp = document.getElementById('ai-input');
+  const q   = inp.value.trim();
+  if(!q) return;
+  inp.value = '';
+
+  const box = document.getElementById('ai-messages');
+  box.innerHTML += `<div class="msg user">${q}</div>`;
+  box.scrollTop = box.scrollHeight;
+
+  // Check local KB first
+  const local = matchKB(q);
+  if(local){
+    const fmt = local.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    box.innerHTML += `<div class="msg ai">${fmt}<br><br><span style="font-size:10px;opacity:.5">📚 Respuesta local (sin consumo API)</span></div>`;
+    box.scrollTop = box.scrollHeight;
+    return;
   }
 
-  // CABLEADO
-  document.getElementById("cableadoResult").innerHTML=`
-    <div class="cable-row header">
-      <span>Tipo de cable</span><span>Sección</span><span>AWG</span><span>Metros</span>
-    </div>
-    <div class="cable-row">
-      <span>🔴 Cable positivo DC (solar)</span>
-      <span class="badge-green">${r.secCableDC} mm²</span>
-      <span>${r.awgDC}</span>
-      <span><strong>${r.metrosCablePos} m</strong></span>
-    </div>
-    <div class="cable-row">
-      <span>⚫ Cable negativo DC (solar)</span>
-      <span class="badge-green">${r.secCableDC} mm²</span>
-      <span>${r.awgDC}</span>
-      <span><strong>${r.metrosCableNeg} m</strong></span>
-    </div>
-    <div class="cable-row">
-      <span>🔵 Cable AC (fase/neutro)</span>
-      <span class="badge-blue">${r.secCableAC} mm²</span>
-      <span>${r.awgAC}</span>
-      <span><strong>${r.metrosCableAC} m</strong></span>
-    </div>
-    <div class="cable-row">
-      <span>🟢 Cable tierra (ground)</span>
-      <span class="badge-yellow">${r.secTierra} mm²</span>
-      <span>${mm2ToAWG(r.secTierra)}</span>
-      <span><strong>${r.metrosTierra} m</strong></span>
-    </div>
-    <div style="margin-top:16px;padding:14px;background:var(--bg3);border-radius:10px;font-size:.82rem;color:var(--text2);line-height:1.6;">
-      <strong style="color:var(--text);">📋 Notas importantes:</strong><br>
-      • Cable DC: usar cable solar UV-resistente, doble aislamiento (TÜV/UL), ${r.tipoCableDC.toUpperCase()}<br>
-      • Material conductor: ${r.material==="cobre"?"Cobre (recomendado para instalaciones solares)":"Aluminio (usar conectores bimetálicos en uniones)"}<br>
-      • Caída máxima DC: ${document.getElementById("caldTensionDC").value}% · Caída máxima AC: ${document.getElementById("caldTensionAC").value}%<br>
-      • Agregar 10–15% a los metros calculados por curvas y conexiones
-    </div>
-  `;
+  // Call Cloudflare Worker
+  const workerUrl = document.getElementById('ai-worker-url').value.trim();
+  if(!workerUrl){ box.innerHTML += `<div class="msg ai">⚠️ Configura la URL del Worker en el panel de API Key.</div>`; return; }
 
-  // PROTECCIONES
-  document.getElementById("proteccionesResult").innerHTML=`
-    <div class="alert warning">⚡ Instalar protecciones según NEC 2020 / RETIE (Colombia)</div>
-    <table class="detail-table">
-      <tr><th>Componente</th><th>Especificación</th></tr>
-      <tr><td>Tablero eléctrico DC/AC</td><td class="td-green">${r.tipoTablero} — ${r.espaciosBreaker} posiciones usadas</td></tr>
-      <tr><td>Breaker AC principal</td><td>${r.breakerACa} A — ${r.breakerACa >= 60 ? "2 polos" : "1 polo"} · Curva C</td></tr>
-      <tr><td>Fusible DC por string</td><td>${r.fusibleDCstringA} A / 1000V DC (${r.stringsParalelo} fusibles)</td></tr>
-      <tr><td>Portafusible DC</td><td>Portafusible 1000V DC IP65 (${r.stringsParalelo} uds)</td></tr>
-      <tr><td>Seccionador DC</td><td>${r.seccionadorDC}</td></tr>
-      <tr><td>DPS / Pararrayos DC</td><td>${r.dps} · Clase II · ${r.stringsParalelo} canales</td></tr>
-      <tr><td>DPS AC</td><td>DPS Clase II 275V AC · 1 unidad</td></tr>
-      <tr><td>Interruptor diferencial AC</td><td>30 mA — misma corriente que breaker AC</td></tr>
-      <tr><td>Puesta a tierra</td><td>Varilla cooperweld 1.8m + cable tierra ${r.secTierra} mm²</td></tr>
-    </table>
-    <div style="margin-top:16px;padding:14px;background:var(--bg3);border-radius:10px;font-size:.82rem;color:var(--text2);line-height:1.6;">
-      <strong style="color:var(--text);">📋 Breakers recomendados por posición:</strong><br>
-      • Pos. 1: Breaker AC salida inversor — ${r.breakerACa}A<br>
-      ${Array.from({length:r.stringsParalelo},(_,i)=>`• Pos. ${i+2}: Fusible/breaker DC String ${i+1} — ${r.fusibleDCstringA}A`).join("<br>")}<br>
-      • Última posición: Reserva (para futuras ampliaciones)
-    </div>
-  `;
+  box.innerHTML += `<div class="msg-typing" id="ai-typing">✦ Consultando asesor IA…</div>`;
+  box.scrollTop = box.scrollHeight;
 
-  // ESTRUCTURA
-  const techoNombre={lamina:"Lámina metálica",teja:"Teja cerámica/fibrocemento",plana:"Techo plano (concreto)",suelo:"Suelo / estructura libre"}[r.tipoTecho];
-  document.getElementById("estructuraResult").innerHTML=`
-    <table class="detail-table">
-      <tr><th>Componente</th><th>Cantidad</th><th>Detalle</th></tr>
-      <tr><td>Tipo de techo/soporte</td><td>—</td><td class="td-green">${techoNombre}</td></tr>
-      <tr><td>Inclinación estructura</td><td>—</td><td>${r.inclinacion}°</td></tr>
-      <tr><td>Rieles de aluminio</td><td class="td-green">${r.metrosRiel.toFixed(1)} m lineales</td><td>Perfil 40×40mm · dividir en tramos de 4.5m</td></tr>
-      <tr><td>Endclamps (extremos)</td><td class="td-green">${r.endclamps} uds</td><td>Para los paneles de los extremos de cada fila</td></tr>
-      <tr><td>Midclamps (intermedios)</td><td class="td-green">${r.midclamps} uds</td><td>Entre paneles contiguos (compartidos)</td></tr>
-      <tr><td>Tornillos + tuercas M8</td><td>${r.tornillos} uds</td><td>Con arandela plana + presión</td></tr>
-      <tr><td>Grapas de techo</td><td>${Math.ceil(r.metrosRiel/1.5)} uds</td><td>Cada ~1.5m según ${techoNombre}</td></tr>
-      <tr><td>Perfil de unión de rieles</td><td>${Math.ceil(r.metrosRiel/4.5)} uds</td><td>Empalme entre tramos de riel</td></tr>
-      <tr><td>Área total instalación</td><td>${r.areaPaneles.toFixed(1)} m²</td><td>${r.panelesPorFila} paneles/fila × ${r.filasReal} filas</td></tr>
-    </table>
-    <div style="margin-top:16px;padding:14px;background:var(--bg3);border-radius:10px;font-size:.82rem;color:var(--text2);line-height:1.6;">
-      <strong style="color:var(--text);">📋 Notas de instalación:</strong><br>
-      • Orientación recomendada en Colombia: <strong>Norte a Sur (cara al norte)</strong>, azimut 0°<br>
-      • Espaciado mínimo entre filas para evitar sombras: ${(r.dAncho * Math.sin(r.inclinacion*Math.PI/180) / Math.tan(15*Math.PI/180)).toFixed(2)} m<br>
-      • Verificar capacidad estructural del techo: carga aprox. ${(r.numPanelesReal*20).toFixed(0)} kg (paneles + estructura)<br>
-      • Impermeabilizar todos los anclajes en techos de lámina o teja
-    </div>
-  `;
+  aiHistory.push({role:'user', content:q});
+  if(aiHistory.length > 10) aiHistory = aiHistory.slice(-10);
 
-  // ADVERTENCIAS
-  const ads=[];
-  if(r.potenciaFinalKwp > 5) ads.push({type:"warning",msg:"⚠️ Sistema > 5 kWp: requiere aprobación del operador de red y contrato de conexión en Colombia (Ley 1715)."});
-  if(r.voltajeDCsistema > 600) ads.push({type:"warning",msg:`⚠️ Voltaje DC del sistema (${r.voltajeDCsistema.toFixed(0)}V) > 600V: verificar que el inversor y cableado soporten este voltaje.`});
-  if(r.stringsParalelo > 3) ads.push({type:"info",msg:"💡 Más de 3 strings: considera un combiner box (caja combinadora) para centralizar los fusibles DC."});
-  if(sysType==="ongrid") ads.push({type:"info",msg:"💡 Sistema On-Grid: cuando la red falla, el inversor se apaga por seguridad (anti-islanding). Considera un híbrido para respaldo."});
-
-  document.getElementById("advertencias").innerHTML = ads.map(a=>`<div class="alert ${a.type}">${a.msg}</div>`).join("");
-}
-
-// ── HELPERS ──
-function normalizarSeccion(s){
-  const std=[1.5,2.5,4,6,10,16,25,35,50,70,95,120];
-  return std.find(v=>v>=s)||120;
-}
-function mm2ToAWG(mm2){
-  const map={1.5:"14 AWG",2.5:"12 AWG",4:"10 AWG",6:"10 AWG",10:"8 AWG",16:"6 AWG",25:"4 AWG",35:"2 AWG",50:"1 AWG",70:"2/0 AWG",95:"3/0 AWG",120:"4/0 AWG"};
-  return map[mm2]||"Ver tabla";
-}
-function calcBreaker(a){
-  const std=[10,15,20,25,30,40,50,60,80,100,125,150,200];
-  return std.find(v=>v>=a)||200;
-}
-function parseDim(val){
-  const parts=val.split("x").map(parseFloat);
-  if(parts.length===2 && !isNaN(parts[0])) return parts;
-  return [1.96,0.99];
-}
-
-function saveCalc(){
-  if(!lastResults){showToast("⚠️ Calcula primero el sistema","error");return;}
-  if(window.saveCalcFirebase){
-    window.saveCalcFirebase({
-      type:"calculation",
-      sysType: lastResults.sysType,
-      panels: lastResults.numPanelesReal,
-      panelWp: lastResults.panelWp,
-      kWp: lastResults.potenciaFinalKwp,
-      inversorKw: (lastResults.potInvRecomendada/1000).toFixed(2),
-      cableDCmm2: lastResults.secCableDC,
-      cableACmm2: lastResults.secCableAC,
-      results: JSON.stringify(lastResults)
+  try{
+    const resp = await fetch(workerUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        uid: 'local-user',
+        messages: aiHistory,
+        system: `Eres un experto técnico en sistemas fotovoltaicos e instalaciones eléctricas solares en Colombia. Respondes con precisión técnica y práctica. Conoces:
+- Norma RETIE (Reglamento Técnico de Instalaciones Eléctricas de Colombia)
+- NTC 2050 (Código Eléctrico Colombiano)
+- Dimensionamiento de sistemas FV: paneles, inversores, baterías, cables y protecciones
+- Marcas disponibles en Colombia: Growatt, Deye, Must, Felicity, JA Solar, Longi, Jinko, Canadian Solar, Tensite, GreenPoint, Pylontech
+- Mantenimiento preventivo y correctivo de sistemas FV
+- Cálculo de protecciones DC y AC (breakers, DPS, fusibles)
+- Tipos de baterías: GEL, AGM, Litio LiFePO4
+- Inversores: On-Grid, Off-Grid, Híbridos
+Responde en español, de forma clara y estructurada. Usa listas cuando sea útil.`
+      })
     });
+    const data = await resp.json();
+    const typing = document.getElementById('ai-typing');
+    if(typing) typing.remove();
+
+    let answer = '';
+    if(data.content) answer = data.content.map(x=>x.text||'').join('');
+    else if(data.error) answer = '⚠️ Error: ' + (data.error.message||JSON.stringify(data.error));
+    else answer = JSON.stringify(data);
+
+    aiHistory.push({role:'assistant', content:answer});
+    const fmtAnswer = answer.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    box.innerHTML += `<div class="msg ai">${fmtAnswer}</div>`;
+    box.scrollTop = box.scrollHeight;
+  } catch(e){
+    const typing = document.getElementById('ai-typing');
+    if(typing) typing.remove();
+    box.innerHTML += `<div class="msg ai">⚠️ Error conectando al Worker: ${e.message}. Verifica la URL y que el Worker esté activo.</div>`;
+    box.scrollTop = box.scrollHeight;
   }
 }
 
-function irCostos(){
-  if(lastResults) localStorage.setItem("calcResults", JSON.stringify(lastResults));
-  window.location.href="costs.html";
-}
-
-function recalcular(){
-  goStep(1);
-  showToast("🔄 Ajusta los parámetros y vuelve a calcular");
-}
-
-// Añadir 3 electrodomésticos por defecto
-addAppliance();
-addAppliance();
-addAppliance();
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+document.getElementById('p-fecha').value = new Date().toISOString().split('T')[0];
+populateSelects();
+renderCargas();
+calcAire();
 </script>
 </body>
 </html>
